@@ -8,19 +8,19 @@ import networkx as nx
 import matplotlib.cm as cm
 from tqdm import tqdm
 
-# 加载 MNIST 数据集
+# Load the MNIST dataset
 trainset = datasets.MNIST('data', download=True, train=True)
 
-# 加载 OpenCLIP 模型和预处理工具
+# Load the OpenCLIP model and preprocessing tools
 model, _, preprocess = open_clip.create_model_and_transforms('convnext_base_w', pretrained='laion2b_s13b_b82k_augreg')
 
-# 初始化列表以存储特征和标签
+# Initialize lists to store features and labels
 features = []
 labels = []
 
-# 处理数据集的一个小子集，例如前1000个图像
+# Process a small subset of the dataset, for example, the first 1000 images
 for i, (image, label) in enumerate(tqdm(trainset)):
-    if i >= 100:  # 限制处理的图像数量
+    if i >= 100:  # Limit the number of processed images
         break
     preprocessed_image = preprocess(image).unsqueeze(0)
 
@@ -28,33 +28,33 @@ for i, (image, label) in enumerate(tqdm(trainset)):
         image_feature = model.encode_image(preprocessed_image)
         image_feature /= image_feature.norm(dim=-1, keepdim=True)
 
-    features.append(image_feature.squeeze().numpy())  # 移除批次维度并转换为 numpy
+    features.append(image_feature.squeeze().numpy())  # Remove batch dimension and convert to numpy
     labels.append(label)
 
-# 转换为 numpy 数组
+# Convert to numpy arrays
 features = np.array(features)
 
-# 使用 k-NN 算法找到最近邻
+# Use k-NN algorithm to find nearest neighbors
 nbrs = NearestNeighbors(n_neighbors=5, algorithm='auto').fit(features)
 distances, indices = nbrs.kneighbors(features)
 
-# 创建图
+# Create graph
 G = nx.Graph()
 
-# 添加节点和边
+# Add nodes and edges
 for i in range(len(features)):
     G.add_node(i, label=labels[i])
 
 for i, neighbors in enumerate(indices):
     for neighbor in neighbors:
-        if i < neighbor:  # 避免重复添加
+        if i < neighbor:  # Avoid adding duplicates
             G.add_edge(i, neighbor)
 
-# 准备绘图
-pos = nx.random_layout(G)  # 随机布局
-color_map = [G.nodes[i]['label'] for i in G.nodes]  # 根据标签设置颜色
+# Prepare for plotting
+pos = nx.random_layout(G)  # Random layout
+color_map = [G.nodes[i]['label'] for i in G.nodes]  # Set colors based on labels
 
-# 绘制图
+# Plot
 plt.figure(figsize=(10, 10))
 nx.draw(G, pos, node_color=color_map, node_size=20, cmap=cm.get_cmap('tab10'), with_labels=False)
 plt.title('MNIST k-NN Graph Visualization')
