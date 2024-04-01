@@ -31,7 +31,7 @@ class Pipeline:
     def calculate_winding_numbers(self, laplacian, sigmas):
         """
         Solve the linear system:
-        - L W = 0
+        - L * W = 0
         - W1 - W2 = sigmas
 
         :param laplacian:
