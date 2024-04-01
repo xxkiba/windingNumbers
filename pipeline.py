@@ -1,80 +1,64 @@
-from __future__ import annotations
-
-import os
-
-import numpy as np
-from sklearn.neighbors import NearestNeighbors
-
-from load_data import load_data
+from graph import *
 
 
-class Point:
-    def __init__(self, ID, feature, label):
-        self.ID = ID
-        self.feature = feature
-        self.label = label
-
-    @staticmethod
-    def get_distance(v1: Point, v2: Point):
-        return np.linalg.norm(v1.feature - v2.feature)
-
-
-class Edge:
-    def __init__(self, v1: Point, v2: Point):
-        self.v1 = v1
-        self.v2 = v2
-
-    def is_stroke(self):
-        return self.v1.label != self.v2.label
-
-
-class Graph:
+class Pipeline:
     def __init__(self):
-        # ID: Point
-        self.vertices = {}
-        # (i, j) -> edge
-        self.edges = {}
+        self.g = Graph()
+        self.g.build_graph(regenerate=False)
 
-        self.num_points = 100
-        self.knn_k = 5
+    def get_laplacian(self):
+        """
 
-    def build_graph(self, regenerate=False):
+        :return: laplacian (|V|, |V|)
+        """
+        n = len(self.g.vertices)
 
-        dir_graph = f"graphs/{self.num_points}/"
-        if os.path.isdir(dir_graph) and not regenerate:
-            features = np.load(f'{dir_graph}/features.npy')
-            labels = np.load(f'{dir_graph}/labels.npy')
-        else:
-            features, labels = load_data(limit=self.num_points)
-            os.makedirs(dir_graph, exist_ok=True)
-            np.save(f'{dir_graph}/features.npy', features)
-            np.save(f'{dir_graph}/labels.npy', labels)
+        adj = np.zeros((n, n))
 
-        for ID, (feature, label) in enumerate(zip(features, labels)):
-            self.vertices[ID] = Point(ID, feature, label)
-        self._generate_edges_by_knn(features)
+        degrees = np.zeros((n, n))
 
-    def _generate_edges_by_knn(self, features):
-        n_neighbors = NearestNeighbors(n_neighbors=self.knn_k, algorithm='auto').fit(features)
-        distances, indices = n_neighbors.kneighbors(features)
+        laplacian = degrees - adj
 
-        for i, neighbors in enumerate(indices):
-            for neighbor in neighbors:
-                if i < neighbor:  # Avoid adding duplicates
-                    self.edges[(i, neighbor)] = Edge(self.vertices[i], self.vertices[neighbor])
+        return laplacian
 
-    def get_edge(self, i, j):
-        # assert i < j
-        return self.edges[tuple(sorted([i, j]))]
+    def get_sigmas(self, stroke_direction):
+        """
 
-    def get_vertex(self, i):
-        return self.vertices[i]
+        :param stroke_direction: {(label1, label2): ±1}
+        :return: sigmas: sigma vector (|S|, 1), value = ±1
+        """
 
+    def calculate_winding_numbers(self, laplacian, sigmas):
+        """
+        Solve the linear system:
+        - L W = 0
+        - W1 - W2 = sigmas
 
-if __name__ == '__main__':
-    g = Graph()
+        :param laplacian:
+        :param sigmas:
+        :return: wn: winding number values for vertices: (|S|, 1)
+        """
 
-    g.build_graph(regenerate=False)
+    def calculate_total_variance(self, wn):
+        """
+        tv = sum (wi - wj) for eij in E/S
 
-    print(len(g.vertices))
-    print(len(g.edges))
+        :param wn: winding number values for vertices: (|S|, 1)
+        :return: tv: total variance: float
+        """
+
+    def get_features(self, dimension=8):
+        """
+
+        consider different situations of stoke directions
+        feature is the minimum dimension winding numbers
+
+        :return: ft: (|V|, dimension)
+        """
+
+    def cluster(self):
+        """
+        spectral cluster to assign labels to vertices
+
+        :return:
+        """
