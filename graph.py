@@ -18,6 +18,19 @@ class Point:
     def get_distance(v1: Point, v2: Point):
         return np.linalg.norm(v1.feature - v2.feature)
 
+    @staticmethod
+    def gaussian_similarity(x1, x2, sigma):
+        """
+        Compute the Gaussian similarity between two points.
+        """
+        # Calculate the Euclidean distance squared
+        distance_squared = np.sum(Point.get_distance(x1, x2) ** 2)
+
+        # Compute the Gaussian similarity
+        similarity = np.exp(-distance_squared / (2 * sigma ** 2))
+
+        return similarity
+
 
 class Edge:
     def __init__(self, v1: Point, v2: Point):

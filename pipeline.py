@@ -11,11 +11,21 @@ class Pipeline:
 
         :return: laplacian (|V|, |V|)
         """
+
         n = len(self.g.vertices)
 
         adj = np.zeros((n, n))
 
+        for i in range(n):
+            for j in range(n):
+                if self.g.edges[(i, j)] or self.g.edges[(j, i)]:
+                    adj[i, j] = Point.gaussian_similarity(self.g.vertices[i], self.g.vertices[j], 1)
+                    adj[j, i] = Point.gaussian_similarity(self.g.vertices[i], self.g.vertices[j], 1)
+
         degrees = np.zeros((n, n))
+
+        for i in range(n):
+            degrees[i, i] = np.sum(adj[i, :])
 
         laplacian = degrees - adj
 
