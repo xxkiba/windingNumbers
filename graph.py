@@ -16,6 +16,9 @@ class Point:
         self.label = label
         self.labeled = labeled
 
+        self.predicted_ft = None
+        self.predicted_lb = None
+
     @staticmethod
     def get_distance(v1: Point, v2: Point):
         return np.linalg.norm(v1.feature - v2.feature)
@@ -79,10 +82,18 @@ class Graph:
 
         self._generate_edges_by_knn(features)
 
-    def visualize_simple_graph(self):
+    def visualize_simple_graph(self, pre=False):
+        # pre=True means show predicted labels
+
+        def _get_lb(p: Point):
+            if pre:
+                return p.predicted_lb
+            else:
+                return p.label
+
         fig, ax = plt.subplots()
         for point in self.vertices.values():
-            color = 'red' if point.label == 1 else 'blue'
+            color = 'red' if _get_lb(point) == 1 else 'blue'
             marker = 'o' if point.labeled else 'x'
             ax.scatter(point.feature[0], point.feature[1], c=color, marker=marker)
 
