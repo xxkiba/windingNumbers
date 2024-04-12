@@ -52,13 +52,20 @@ class Graph:
         # (i, j) -> edge
         self.edges = {}
 
-        self.num_points = 100
+        self.num_points = 50
         self.knn_k = 5
         self.train_ratio = 0.7
 
         # For simple graph
         self.xy = 2  # -xy, +xy
         self.r = 1.5
+
+    def get_all_labels(self):
+        labels = set()
+        for v in self.vertices.values():
+            if v.labeled:
+                labels.add(v.label)
+        return sorted(list(labels))
 
     def build_simple_graph(self):
         features = np.random.uniform(-self.xy, self.xy, (self.num_points, 2))
@@ -124,6 +131,7 @@ class Graph:
             np.save(f'{dir_graph}/labels.npy', labels)
 
         for ID, (feature, label) in enumerate(zip(features, labels)):
+            # in future work, we need to guarantee that there's no new labels
             if ID < self.train_ratio * len(labels):
                 self.vertices[ID] = Point(ID, feature, label, labeled=True)
             else:
