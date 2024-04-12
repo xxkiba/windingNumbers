@@ -4,6 +4,7 @@ import os
 
 import numpy as np
 from sklearn.neighbors import NearestNeighbors
+import matplotlib.pyplot as plt
 
 from load_data import load_data
 
@@ -53,8 +54,64 @@ class Graph:
 
         self.num_points = 100
         self.knn_k = 5
+        self.train_ratio = 0.7
 
-    def build_graph(self, regenerate=False, trainRatio=0.7):
+        # For simple graph
+        self.xy = 2  # -xy, +xy
+        self.r = 1.5
+
+    def build_simple_graph(self):
+        features = np.random.uniform(-self.xy, self.xy, (self.num_points, 2))
+        labels = np.array([1 if np.linalg.norm(f) < self.r else 0 for f in features])
+
+        for ID, (feature, label) in enumerate(zip(features, labels)):
+            if ID < self.train_ratio * len(labels):
+                self.vertices[ID] = Point(ID, feature, label, labeled=True)
+            else:
+                self.vertices[ID] = Point(ID, feature, label, labeled=False)
+
+        self._generate_edges_by_knn(features)
+
+    def visualize_simple_graph(self):
+        fig, ax = plt.subplots()
+        for point in self.vertices.values():
+            color = 'red' if point.label == 1 else 'blue'
+            marker = 'o' if point.labeled else 'x'
+            ax.scatter(point.feature[0], point.feature[1], c=color, marker=marker)
+
+        # Draw edges between points
+        for (i, j) in self.edges.keys():
+            point1 = self.vertices[i].feature
+            point2 = self.vertices[j].feature
+            ax.plot([point1[0], point2[0]], [point1[1], point2[1]], 'gray', linestyle='-',
+                    linewidth=0.5)  # Draw line between points
+
+        # Draw a circle for visual boundary
+        circle = plt.Circle((0, 0), self.r, color='green', fill=False)
+        ax.add_artist(circle)
+
+        plt.xlim(-self.xy, self.xy)
+        plt.ylim(-self.xy, self.xy)
+
+        ax.set_aspect('equal', adjustable='box')  # Set the aspect ratio to be equal
+
+        plt.axhline(0, color='grey', linewidth=0.5)
+        plt.axvline(0, color='grey', linewidth=0.5)
+        plt.title(f'Graph Visualization\nK={self.knn_k}, N={self.num_points}, TrainRatio={self.train_ratio}')
+        plt.xlabel('X Coordinate')
+        plt.ylabel('Y Coordinate')
+        plt.grid(True)
+
+        # Legend
+        ax.scatter([], [], c='red', marker='o', label='Labeled Inside')
+        ax.scatter([], [], c='red', marker='x', label='Unlabeled Inside')
+        ax.scatter([], [], c='blue', marker='o', label='Labeled Outside')
+        ax.scatter([], [], c='blue', marker='x', label='Unlabeled Outside')
+        plt.legend(loc='upper right')
+
+        plt.show()
+
+    def build_graph(self, regenerate=False):
 
         dir_graph = f"graphs/{self.num_points}/"
         if os.path.isdir(dir_graph) and not regenerate:
@@ -67,7 +124,7 @@ class Graph:
             np.save(f'{dir_graph}/labels.npy', labels)
 
         for ID, (feature, label) in enumerate(zip(features, labels)):
-            if ID < trainRatio * len(labels):
+            if ID < self.train_ratio * len(labels):
                 self.vertices[ID] = Point(ID, feature, label, labeled=True)
             else:
                 self.vertices[ID] = Point(ID, feature, label, labeled=False)
@@ -93,7 +150,10 @@ class Graph:
 if __name__ == '__main__':
     g = Graph()
 
-    g.build_graph(regenerate=False)
+    # g.build_graph(regenerate=False)
+
+    g.build_simple_graph()
+    g.visualize_simple_graph()
 
     print(len(g.vertices))
     print(len(g.edges))

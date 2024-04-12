@@ -4,7 +4,8 @@ from graph import *
 class Pipeline:
     def __init__(self):
         self.g = Graph()
-        self.g.build_graph(regenerate=False)
+        # self.g.build_graph(regenerate=False)
+        self.g.build_simple_graph()
 
     def get_laplacian(self):
         """
