@@ -14,12 +14,12 @@ class Pipeline:
         self.g.build_simple_graph()
         print("Graph Generated")
 
+        laplacian = self.get_laplacian()
+
         labels = self.g.get_all_labels()
         all_combinations = list(self.generate_combinations(labels))
         print(all_combinations)
         # [{(0, 1): -1}, {(0, 1): 1}]
-
-        laplacian = self.get_laplacian()
 
         tvs = []
         for stroke_direction in tqdm(all_combinations):
