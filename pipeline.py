@@ -1,5 +1,7 @@
 import itertools
 
+from tqdm import tqdm
+
 from graph import *
 
 
@@ -16,6 +18,19 @@ class Pipeline:
         all_combinations = list(self.generate_combinations(labels))
         print(all_combinations)
         # [{(0, 1): -1}, {(0, 1): 1}]
+
+        laplacian = self.get_laplacian()
+
+        tvs = []
+        for stroke_direction in tqdm(all_combinations):
+            sigmas = self.get_sigmas(stroke_direction)
+            wn = self.calculate_winding_numbers(laplacian, sigmas)
+            tv = self.calculate_total_variance(wn)
+            tvs.append(tv)
+
+        fts = self.get_features(tvs)
+
+        self.predict_labels(fts)
 
     @staticmethod
     def generate_combinations(labels):
@@ -62,7 +77,7 @@ class Pipeline:
     def get_sigmas(self, stroke_direction):
         """
 
-        :param stroke_direction: {(label1, label2): ±1}
+        :param: stroke_direction: {(label1, label2): ±1}
         :return: sigmas: sigma vector (|S|, 1), value = ±1
         """
 
@@ -72,8 +87,8 @@ class Pipeline:
         - L * W = 0
         - W1 - W2 = sigmas
 
-        :param laplacian:
-        :param sigmas:
+        :param: laplacian:
+        :param: sigmas:
         :return: wn: winding number values for vertices: (|S|, 1)
         """
 
@@ -81,11 +96,11 @@ class Pipeline:
         """
         tv = sum (wi - wj) for eij in E/S
 
-        :param wn: winding number values for vertices: (|S|, 1)
+        :param: wn: winding number values for vertices: (|S|, 1)
         :return: tv: total variance: float
         """
 
-    def get_features(self, dimension=8):
+    def get_features(self, tvs, dimension=8):
         """
 
         consider different situations of stoke directions
@@ -94,7 +109,7 @@ class Pipeline:
         :return: ft: (|V|, dimension)
         """
 
-    def cluster(self):
+    def predict_labels(self, fts):
         """
         spectral cluster to assign labels to vertices
 
