@@ -9,10 +9,11 @@ from load_data import load_data
 
 
 class Point:
-    def __init__(self, ID, feature, label):
+    def __init__(self, ID, feature, label, labeled):
         self.ID = ID
         self.feature = feature
         self.label = label
+        self.labeled = labeled
 
     @staticmethod
     def get_distance(v1: Point, v2: Point):
@@ -38,6 +39,8 @@ class Edge:
         self.v2 = v2
 
     def is_stroke(self):
+        if not self.v1.labeled or not self.v2.labeled:
+            return False
         return self.v1.label != self.v2.label
 
 
@@ -51,7 +54,7 @@ class Graph:
         self.num_points = 100
         self.knn_k = 5
 
-    def build_graph(self, regenerate=False):
+    def build_graph(self, regenerate=False, trainRatio=0.7):
 
         dir_graph = f"graphs/{self.num_points}/"
         if os.path.isdir(dir_graph) and not regenerate:
@@ -64,7 +67,10 @@ class Graph:
             np.save(f'{dir_graph}/labels.npy', labels)
 
         for ID, (feature, label) in enumerate(zip(features, labels)):
-            self.vertices[ID] = Point(ID, feature, label)
+            if ID < trainRatio * len(labels):
+                self.vertices[ID] = Point(ID, feature, label, labeled=True)
+            else:
+                self.vertices[ID] = Point(ID, feature, label, labeled=False)
         self._generate_edges_by_knn(features)
 
     def _generate_edges_by_knn(self, features):
