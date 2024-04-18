@@ -45,6 +45,7 @@ class Edge:
     def is_stroke(self):
         if not self.v1.labeled or not self.v2.labeled:
             return False
+        # print(self.v1.label, self.v2.label)
         return self.v1.label != self.v2.label
 
 
@@ -55,7 +56,7 @@ class Graph:
         # (i, j) -> edge
         self.edges = {}
         # [(i, j), ...]
-        self.strokes_ij = [(i, j) for (i, j), edge in self.edges.items() if edge.is_stroke()]
+        self.strokes_ij = []
 
         self.num_points = 50
         self.knn_k = 5
@@ -83,6 +84,8 @@ class Graph:
                 self.vertices[ID] = Point(ID, feature, label, labeled=False)
 
         self._generate_edges_by_knn(features)
+
+        self.strokes_ij = [(i, j) for (i, j), edge in self.edges.items() if edge.is_stroke()]
 
     def visualize_simple_graph(self, pre=False):
         # pre=True means show predicted labels
@@ -150,6 +153,7 @@ class Graph:
             else:
                 self.vertices[ID] = Point(ID, feature, label, labeled=False)
         self._generate_edges_by_knn(features)
+        self.strokes_ij = [(i, j) for (i, j), edge in self.edges.items() if edge.is_stroke()]
 
     def _generate_edges_by_knn(self, features):
         n_neighbors = NearestNeighbors(n_neighbors=self.knn_k, algorithm='auto').fit(features)
