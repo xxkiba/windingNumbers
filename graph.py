@@ -152,9 +152,11 @@ class Graph:
     def _generate_edges_by_knn(self, features):
         n_neighbors = NearestNeighbors(n_neighbors=self.knn_k, algorithm='auto').fit(features)
         distances, indices = n_neighbors.kneighbors(features)
+        # print(indices)
 
         for i, neighbors in enumerate(indices):
             for neighbor in neighbors:
+                # print(i,neighbor)
                 if i < neighbor:  # Avoid adding duplicates
                     self.edges[(i, neighbor)] = Edge(self.vertices[i], self.vertices[neighbor])
 

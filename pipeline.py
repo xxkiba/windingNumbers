@@ -1,5 +1,6 @@
 import itertools
 
+import numpy as np
 from tqdm import tqdm
 
 from graph import *
@@ -23,6 +24,7 @@ class Pipeline:
 
         tvs = []
         for stroke_direction in tqdm(all_combinations):
+            # print(   )
             sigmas = self.get_sigmas(stroke_direction)
             wn = self.calculate_winding_numbers(laplacian, sigmas)
             tv = self.calculate_total_variance(wn)
@@ -30,7 +32,7 @@ class Pipeline:
 
         fts = self.get_features(tvs)
 
-        # fts = [p.feature for p in self.g.vertices.values()]
+        fts = [p.feature for p in self.g.vertices.values()]
 
         self.predict_labels(fts)
 
@@ -63,11 +65,11 @@ class Pipeline:
 
         adj = np.zeros((n, n))
 
-        for i in range(n):
-            for j in range(n):
-                if self.g.edges[(i, j)] or self.g.edges[(j, i)]:
-                    adj[i, j] = Point.gaussian_similarity(self.g.vertices[i], self.g.vertices[j], 1)
-                    adj[j, i] = Point.gaussian_similarity(self.g.vertices[i], self.g.vertices[j], 1)
+        for (i, j), value in self.g.edges.items():
+            if not value.is_stroke():
+                # print(i, j)
+                adj[i, j] = Point.gaussian_similarity(self.g.vertices[i], self.g.vertices[j], 1)
+                adj[j, i] = Point.gaussian_similarity(self.g.vertices[i], self.g.vertices[j], 1)
 
         degrees = np.zeros((n, n))
 
@@ -75,6 +77,13 @@ class Pipeline:
             degrees[i, i] = np.sum(adj[i, :])
 
         laplacian = degrees - adj
+
+        weights = np.zeros((n, n))
+        b = np.zeros(n)
+        for (i, j), value in self.g.edges.items():
+            if value.is_stroke():
+                weights[i, j] = 
+
 
         return laplacian
 
@@ -84,6 +93,14 @@ class Pipeline:
         :param: stroke_direction: {(label1, label2): ±1}
         :return: sigmas: sigma vector (|S|, 1), value = ±1
         """
+        # print("strokes ", stroke_direction)
+        n = len(self.g.vertices)
+        sigmas = np.zeros((n, n))
+        for (i, j), value in stroke_direction.items():
+            sigmas[i, j] = value
+            sigmas[j, i] = -value
+        return sigmas
+
 
     def calculate_winding_numbers(self, laplacian, sigmas):
         """
@@ -95,6 +112,10 @@ class Pipeline:
         :param: sigmas:
         :return: wn: winding number values for vertices: (|S|, 1)
         """
+        b = np.zeros(len(self.g.vertices))
+        w = np.linalg.solve(laplacian,b)
+
+
 
     def calculate_total_variance(self, wn):
         """
