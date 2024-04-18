@@ -135,6 +135,11 @@ class Pipeline:
         :param: wn: winding number values for vertices: (|S|, 1)
         :return: tv: total variance: float
         """
+        tv = 0
+        for (i, j), edge in self.g.edges.items():
+            if not edge.is_stroke():
+                tv += abs(wn[i] - wn[j])
+        return tv
 
     def get_features(self, tv_wns, dimension=5):
         """
