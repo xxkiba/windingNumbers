@@ -15,13 +15,13 @@ class Pipeline:
     def run(self):
         # self.g.build_graph(regenerate=False)
         self.g.build_simple_graph()
-        print("Graph Generated")
+        # print("Graph Generated")
 
         laplacian = self.get_laplacian()
 
         labels = self.g.get_all_labels()
         all_combinations = list(self.generate_combinations(labels))
-        print(all_combinations)
+        # print(all_combinations)
         # [{(0, 1): -1}, {(0, 1): 1}]
 
         sample_combinations = random.sample(all_combinations, min(len(all_combinations), self.sample_n))
@@ -120,7 +120,9 @@ class Pipeline:
         b_1 = np.zeros(n)
         b = np.append(b_1, b_2, axis=0)
         A = np.append(laplacian, weights, axis=0)
-        w = np.linalg.solve(A, b)
+        print(b_2)
+        ## least square solution
+        w, residuals, rank, s = np.linalg.lstsq(A, b, rcond=None)
         print(w)
         return w
 
@@ -180,12 +182,12 @@ class Pipeline:
             if counts[label] > 0:
                 centroids[label] /= counts[label]
 
-        print(centroids)
-        print(counts)
+        # print(centroids)
+        # print(counts)
 
         assignments = {}
 
-        print("Kmeans clustering to predict labels...")
+        # print("Kmeans clustering to predict labels...")
         # K-means iteration
         for _ in tqdm(range(num_iterations)):  # Run for a fixed number of iterations
             # Step 2: Assign vertices to the nearest centroid
