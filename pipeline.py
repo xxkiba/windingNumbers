@@ -92,8 +92,14 @@ class Pipeline:
         # print("strokes ", stroke_direction)
         n = len(self.g.vertices)
         sigmas = np.zeros((n, n))
-        for (i, j), value in stroke_direction.items():
-            sigmas[i, j] = value
+        for (i, j), value in self.g.edges.items():
+            if value.is_stroke:
+                for (_i, _j), _value in stroke_direction.items():
+                    if (self.g.get_vertex(i).label, self.g.get_vertex(j).label) == (_i, _j) or (self.g.get_vertex(j).label, self.g.get_vertex(i).label) == (_i, _j):
+                        sigmas[i, j] = _value
+
+
+        print(sigmas)
         return sigmas
 
 
@@ -115,12 +121,15 @@ class Pipeline:
         for (i, j) in self.g.strokes_ij:
             weights[k, i] = 1
             weights[k, j] = -1
+
             b_2[k] = sigmas[i, j]
+            # print(sigmas[i, j])
+            print(i, j)
             k += 1
         b_1 = np.zeros(n)
         b = np.append(b_1, b_2, axis=0)
         A = np.append(laplacian, weights, axis=0)
-        print(b_2)
+        # print(b_2)
         ## least square solution
         w, residuals, rank, s = np.linalg.lstsq(A, b, rcond=None)
         print(w)
