@@ -80,6 +80,7 @@ class Pipeline:
 
         weights = np.zeros((n, n))
         b = np.zeros(n)
+        w_ij = len(self.g.strokes_ij)
         for (i, j), value in self.g.edges.items():
             if value.is_stroke():
                 weights[i, j] = 
@@ -98,7 +99,6 @@ class Pipeline:
         sigmas = np.zeros((n, n))
         for (i, j), value in stroke_direction.items():
             sigmas[i, j] = value
-            sigmas[j, i] = -value
         return sigmas
 
 
