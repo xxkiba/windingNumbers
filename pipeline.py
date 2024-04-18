@@ -98,11 +98,11 @@ class Pipeline:
         for (i, j), value in self.g.edges.items():
             if value.is_stroke:
                 for (_i, _j), _value in stroke_direction.items():
-                    if (self.g.get_vertex(i).label, self.g.get_vertex(j).label) == (_i, _j) or (self.g.get_vertex(j).label, self.g.get_vertex(i).label) == (_i, _j):
+                    if (self.g.get_vertex(i).label, self.g.get_vertex(j).label) == (_i, _j) or (
+                            self.g.get_vertex(j).label, self.g.get_vertex(i).label) == (_i, _j):
                         sigmas[i, j] = _value
 
-
-        print(sigmas)
+        # print(sigmas)
         return sigmas
 
     def calculate_winding_numbers(self, laplacian, sigmas):
