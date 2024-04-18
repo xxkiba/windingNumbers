@@ -8,24 +8,34 @@ from graph import *
 
 
 class Pipeline:
-    def __init__(self, sample_n=10):
+    def __init__(self, sample_n=100, simple=True, feature_dimension=5):
         self.g = Graph()
         self.sample_n = sample_n
+        self.simple = simple
+        self.predicted_ft_d = feature_dimension
 
     def run(self):
-        # self.g.build_graph(regenerate=False)
-        self.g.build_simple_graph()
-        # print("Graph Generated")
+        if self.simple:
+            self.g.build_simple_graph()
+        else:
+            self.g.build_graph(regenerate=False)
+        print("Graph Generated")
 
+        print("Solving Laplace...")
         laplacian = self.get_laplacian()
 
+        print("Generating sampled stroke direction combinations...")
         labels = self.g.get_all_labels()
-        all_combinations = list(self.generate_combinations(labels))
-        # print(all_combinations)
-        # [{(0, 1): -1}, {(0, 1): 1}]
+        # all_combinations = list(self.generate_combinations(labels))
+        # # print(all_combinations)
+        # # [{(0, 1): -1}, {(0, 1): 1}]
+        # sample_combinations = random.sample(all_combinations, min(len(all_combinations), self.sample_n))
 
-        sample_combinations = random.sample(all_combinations, min(len(all_combinations), self.sample_n))
+        sample_combinations = self.generate_sampled_combinations(labels)
+        print(len(sample_combinations))
+        print(sample_combinations[0])
 
+        print("Start Solving Equation Systems...")
         tv_wns = []
         for stroke_direction in tqdm(sample_combinations):
             sigmas = self.get_sigmas(stroke_direction)
@@ -36,16 +46,59 @@ class Pipeline:
                 tv=tv,
             ))
 
+        print("Calculating features...")
         fts = self.get_features(tv_wns)
 
-        # fts = [p.feature for p in self.g.vertices.values()]
+        # print(fts)
 
+        # fts = [p.feature for p in self.g.vertices.values()]
+        print("Kmeans...")
         self.predict_labels(fts)
 
-        self.g.visualize_simple_graph(pre=True)
+        print("Done! Summarizing results...")
+        if self.simple:
+            self.g.visualize_simple_graph(pre=True)
+        else:
+            self.cal_accuracy()
+
+    def generate_sampled_combinations(self, labels):
+        # Generate all pairs of labels
+        label_pairs = list(itertools.combinations(labels, 2))
+        num_pairs = len(label_pairs)
+
+        # All possible combinations would be 2 ** num_pairs (very large for big num_pairs)
+        if 2 ** num_pairs < self.sample_n:
+            # raise ValueError("Requested number of unique samples exceeds the total possible combinations")
+            self.sample_n = 2 ** num_pairs
+
+        """
+        For simple graph, we need to change predicted_ft_d
+        """
+        if self.predicted_ft_d > self.sample_n:
+            self.predicted_ft_d = self.sample_n
+
+        # List to hold k different combinations
+        unique_combinations = set()
+
+        # Generate combinations until we have k unique ones
+        while len(unique_combinations) < self.sample_n:
+            # Generate one combination where each label pair is randomly assigned a 1 or -1
+            random_combination = tuple(random.choice([-1, 1]) for _ in range(num_pairs))
+            unique_combinations.add(random_combination)
+
+        # Convert each tuple in the set back to a dictionary format for output
+        combinations = []
+        for combo in unique_combinations:
+            combination_dict = {label_pairs[i]: combo[i] for i in range(num_pairs)}
+            combinations.append(combination_dict)
+
+        return combinations
 
     @staticmethod
     def generate_combinations(labels):
+        """
+        cannot work when there are many combinations
+        """
         # Generate all possible combinations of pairs of labels
         label_pairs = list(itertools.combinations(labels, 2))
         # The total number of combinations is 2 raised to the power of the number of label pairs
@@ -98,11 +151,11 @@ class Pipeline:
         for (i, j), value in self.g.edges.items():
             if value.is_stroke:
                 for (_i, _j), _value in stroke_direction.items():
-                    if (self.g.get_vertex(i).label, self.g.get_vertex(j).label) == (_i, _j) or (self.g.get_vertex(j).label, self.g.get_vertex(i).label) == (_i, _j):
+                    if (self.g.get_vertex(i).label, self.g.get_vertex(j).label) == (_i, _j) or (
+                            self.g.get_vertex(j).label, self.g.get_vertex(i).label) == (_i, _j):
                         sigmas[i, j] = _value
 
-
-        print(sigmas)
+        # print(sigmas)
         return sigmas
 
     def calculate_winding_numbers(self, laplacian, sigmas):
@@ -126,15 +179,15 @@ class Pipeline:
 
             b_2[k] = sigmas[i, j]
             # print(sigmas[i, j])
-            print(i, j)
+            # print(i, j)
             k += 1
         b_1 = np.zeros(n)
         b = np.append(b_1, b_2, axis=0)
         A = np.append(laplacian, weights, axis=0)
         # print(b_2)
-        ## least square solution
+        #   # least square solution
         w, residuals, rank, s = np.linalg.lstsq(A, b, rcond=None)
-        print(w)
+        # print(w)
         return w
 
     def calculate_total_variance(self, wn):
@@ -150,7 +203,7 @@ class Pipeline:
                 tv += abs(wn[i] - wn[j])
         return tv
 
-    def get_features(self, tv_wns, dimension=5):
+    def get_features(self, tv_wns):
         """
 
         consider different situations of stoke directions
@@ -163,11 +216,12 @@ class Pipeline:
 
         sorted_tv_wns = sorted(tv_wns, key=lambda x: x["tv"], reverse=True)
 
-        top_wns = [tv_wn["wn"] for tv_wn in sorted_tv_wns[:dimension]]
+        top_wns = [tv_wn["wn"] for tv_wn in sorted_tv_wns[:self.predicted_ft_d]]
 
         # d × n -> n × d
         features = list(zip(*top_wns))
         features = [np.array(ft, dtype=float) for ft in features]
+        print(np.array(features).shape)
 
         return features
 
@@ -194,7 +248,7 @@ class Pipeline:
 
         # Step 1: Initialize centroids
         labels = set(v.label for v in self.g.vertices.values() if v.labeled)
-        centroids = {label: np.array([0.0, 0.0]) for label in labels}
+        centroids = {label: np.array([0.0 for _ in range(self.predicted_ft_d)]) for label in labels}
         counts = {label: 0 for label in labels}
 
         # Calculate initial centroid positions
@@ -222,11 +276,11 @@ class Pipeline:
                 assignments[v_id] = closest
 
             # Step 3: Update centroids
-            new_centroids = {label: np.array([0.0, 0.0]) for label in labels}
+            new_centroids = {label: np.array([0.0 for _ in range(self.predicted_ft_d)]) for label in labels}
             new_counts = {label: 0 for label in labels}
 
             for v_id, closest in assignments.items():
-                new_centroids[closest] += self.g.vertices[v_id].feature
+                new_centroids[closest] += self.g.vertices[v_id].predicted_ft
                 new_counts[closest] += 1
 
             # Average the sums to update centroids
@@ -246,7 +300,16 @@ class Pipeline:
     def visualize_results(self):
         self.g.visualize_simple_graph(pre=True)
 
+    def cal_accuracy(self):
+        n = len(self.g.vertices)
+        c = 0
+        for vi, v in self.g.vertices.items():
+            if v.label == v.predicted_lb:
+                c += 1
+        print(f"{c} / {n} = {round(c / n, 4)}")
+
 
 if __name__ == '__main__':
-    p = Pipeline()
+    p = Pipeline(simple=False)
+    # p = Pipeline()
     p.run()
