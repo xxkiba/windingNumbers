@@ -1,4 +1,5 @@
 import itertools
+import random
 
 import numpy as np
 from tqdm import tqdm
@@ -7,8 +8,9 @@ from graph import *
 
 
 class Pipeline:
-    def __init__(self):
+    def __init__(self, sample_n=10):
         self.g = Graph()
+        self.sample_n = sample_n
 
     def run(self):
         # self.g.build_graph(regenerate=False)
@@ -22,9 +24,10 @@ class Pipeline:
         print(all_combinations)
         # [{(0, 1): -1}, {(0, 1): 1}]
 
+        sample_combinations = random.sample(all_combinations, min(len(all_combinations), self.sample_n))
+
         tvs = []
-        for stroke_direction in tqdm(all_combinations):
-            # print(   )
+        for stroke_direction in tqdm(sample_combinations):
             sigmas = self.get_sigmas(stroke_direction)
             wn = self.calculate_winding_numbers(laplacian, sigmas)
             tv = self.calculate_total_variance(wn)
