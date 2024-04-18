@@ -78,14 +78,6 @@ class Pipeline:
 
         laplacian = degrees - adj
 
-        weights = np.zeros((n, n))
-        b = np.zeros(n)
-        w_ij = len(self.g.strokes_ij)
-        for (i, j), value in self.g.edges.items():
-            if value.is_stroke():
-                weights[i, j] = 
-
-
         return laplacian
 
     def get_sigmas(self, stroke_direction):
@@ -112,8 +104,22 @@ class Pipeline:
         :param: sigmas:
         :return: wn: winding number values for vertices: (|S|, 1)
         """
-        b = np.zeros(len(self.g.vertices))
-        w = np.linalg.solve(laplacian,b)
+        n = len(self.g.vertices)
+        w_ij = len(self.g.strokes_ij)
+        b_2 = np.zeros(w_ij)
+        weights = np.zeros((w_ij, n))
+        k = 0
+        for (i, j) in self.g.strokes_ij:
+            weights[k, i] = 1
+            weights[k, j] = -1
+            b_2[k] = sigmas[i, j]
+            k += 1
+        b_1 = np.zeros(n)
+        b = np.append(b_1, b_2, axis=0)
+        A = np.append(laplacian, weights, axis=0)
+        w = np.linalg.solve(A, b)
+        print(w)
+        return w
 
 
 
