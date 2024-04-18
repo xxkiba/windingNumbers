@@ -26,16 +26,19 @@ class Pipeline:
 
         sample_combinations = random.sample(all_combinations, min(len(all_combinations), self.sample_n))
 
-        tvs = []
+        tv_wns = []
         for stroke_direction in tqdm(sample_combinations):
             sigmas = self.get_sigmas(stroke_direction)
             wn = self.calculate_winding_numbers(laplacian, sigmas)
             tv = self.calculate_total_variance(wn)
-            tvs.append(tv)
+            tv_wns.append(dict(
+                wn=wn,
+                tv=tv,
+            ))
 
-        fts = self.get_features(tvs)
+        fts = self.get_features(tv_wns)
 
-        fts = [p.feature for p in self.g.vertices.values()]
+        # fts = [p.feature for p in self.g.vertices.values()]
 
         self.predict_labels(fts)
 
@@ -87,7 +90,7 @@ class Pipeline:
         """
 
         :param: stroke_direction: {(label1, label2): ±1}
-        :return: sigmas: sigma vector (|S|, 1), value = ±1
+        :return: sigmas: sigma vector ( |S|, 1), value = ±1
         """
         # print("strokes ", stroke_direction)
         n = len(self.g.vertices)
@@ -95,7 +98,6 @@ class Pipeline:
         for (i, j), value in stroke_direction.items():
             sigmas[i, j] = value
         return sigmas
-
 
     def calculate_winding_numbers(self, laplacian, sigmas):
         """
@@ -124,8 +126,6 @@ class Pipeline:
         print(w)
         return w
 
-
-
     def calculate_total_variance(self, wn):
         """
         tv = sum (wi - wj) for eij in E/S
@@ -134,14 +134,25 @@ class Pipeline:
         :return: tv: total variance: float
         """
 
-    def get_features(self, tvs, dimension=8):
+    def get_features(self, tv_wns, dimension=5):
         """
 
         consider different situations of stoke directions
         feature is the minimum dimension winding numbers
 
+        :param: tv_wns: [{tv: , wn: }, ...]
+
         :return: ft: (|V|, dimension)
         """
+
+        sorted_tv_wns = sorted(tv_wns, key=lambda x: x["tv"], reverse=True)
+
+        top_wns = [tv_wn["wn"] for tv_wn in sorted_tv_wns[:dimension]]
+
+        # d × n -> n × d
+        features = list(np.array(zip(*top_wns), dtype=float))
+
+        return features
 
     def predict_labels(self, fts):
         """
@@ -149,7 +160,7 @@ class Pipeline:
 
         :return:
         """
-        
+
         for i, ft in enumerate(fts):
             self.g.vertices[i].predicted_ft = ft
 
