@@ -43,11 +43,9 @@ class Edge:
         self.v2 = v2
 
     def is_stroke(self):
-        print("*")
         if not self.v1.labeled or not self.v2.labeled:
-            print("Not labeled")
             return False
-        print(self.v1.label, self.v2.label)
+        # print(self.v1.label, self.v2.label)
         return self.v1.label != self.v2.label
 
 
