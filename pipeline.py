@@ -166,7 +166,8 @@ class Pipeline:
         top_wns = [tv_wn["wn"] for tv_wn in sorted_tv_wns[:dimension]]
 
         # d × n -> n × d
-        features = list(np.array(zip(*top_wns), dtype=float))
+        features = list(zip(*top_wns))
+        features = [np.array(ft, dtype=float) for ft in features]
 
         return features
 
