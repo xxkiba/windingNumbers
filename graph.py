@@ -54,6 +54,8 @@ class Graph:
         self.vertices = {}
         # (i, j) -> edge
         self.edges = {}
+        # [(i, j), ...]
+        self.strokes_ij = [(i, j) for (i, j), edge in self.edges.items() if edge.is_stroke()]
 
         self.num_points = 50
         self.knn_k = 5
@@ -164,6 +166,9 @@ class Graph:
 
     def get_vertex(self, i):
         return self.vertices[i]
+
+    def get_strokes_ij(self):
+        return self.strokes_ij
 
 
 if __name__ == '__main__':
