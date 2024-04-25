@@ -1,3 +1,4 @@
+import argparse
 import itertools
 import random
 
@@ -313,6 +314,10 @@ class Pipeline:
 
 
 if __name__ == '__main__':
-    # p = Pipeline(simple=False)
-    p = Pipeline()
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--hard", action="store_true")
+    args = parser.parse_args()
+
+    p = Pipeline(simple=not args.hard)
     p.run()
