@@ -63,7 +63,7 @@ class Graph:
 
         self.num_points = 50
         self.knn_k = 5
-        self.train_ratio = 0.7
+        self.train_ratio = 0.3
 
         # For simple graph
         self.xy = 2  # -xy, +xy
@@ -161,7 +161,8 @@ class Graph:
     def _generate_edges_by_knn(self, features):
         n_neighbors = NearestNeighbors(n_neighbors=self.knn_k, algorithm='auto').fit(features)
         distances, indices = n_neighbors.kneighbors(features)
-        # print(indices)
+        print(distances)
+        print(indices)
 
         for i, neighbors in enumerate(indices):
             for neighbor in neighbors:
