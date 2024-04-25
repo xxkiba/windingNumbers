@@ -106,10 +106,11 @@ class Graph:
             marker = 'o' if point.labeled else 'x'
             ax.scatter(point.feature[0], point.feature[1], c=color, marker=marker)
 
-            # visualize winding number feature
-            predicted_ft = tuple([round(v, 1) for v in point.predicted_ft])
-            ax.text(point.feature[0], point.feature[1],
-                    str(predicted_ft), fontsize=10, ha='right')
+            if pre is True:
+                # visualize winding number feature
+                predicted_ft = tuple([round(v, 1) for v in point.predicted_ft])
+                ax.text(point.feature[0], point.feature[1],
+                        str(predicted_ft), fontsize=10, ha='right')
 
         # Draw edges between points
         for (i, j) in self.edges.keys():
