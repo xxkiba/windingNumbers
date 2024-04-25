@@ -161,13 +161,22 @@ class Graph:
     def _generate_edges_by_knn(self, features):
         n_neighbors = NearestNeighbors(n_neighbors=self.knn_k, algorithm='auto').fit(features)
         distances, indices = n_neighbors.kneighbors(features)
-        # print(indices)
+        print("indices")
+        for index, indice in enumerate(indices):
+            print(index, indice)
 
+        edges = set()
         for i, neighbors in enumerate(indices):
             for neighbor in neighbors:
                 # print(i,neighbor)
-                if i < neighbor:  # Avoid adding duplicates
-                    self.edges[(i, neighbor)] = Edge(self.vertices[i], self.vertices[neighbor])
+                # make sure i < j
+                if i < neighbor:
+                    edges.add((i, neighbor))
+                else:
+                    edges.add((neighbor, i))
+
+        for i, j in edges:
+            self.edges[(i, j)] = Edge(self.vertices[i], self.vertices[j])
 
     def get_edge(self, i, j):
         # assert i < j

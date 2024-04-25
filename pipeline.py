@@ -310,6 +310,6 @@ class Pipeline:
 
 
 if __name__ == '__main__':
-    p = Pipeline(simple=False)
+    p = Pipeline(simple=True)
     # p = Pipeline()
     p.run()
