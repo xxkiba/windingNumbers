@@ -8,6 +8,8 @@ import matplotlib.pyplot as plt
 
 from load_data import load_data
 
+from generate_data import get_labels_from_splitted_graph
+
 
 class Point:
     def __init__(self, ID, feature, label, labeled):
@@ -49,9 +51,6 @@ class Edge:
         return self.v1.label != self.v2.label
 
 
-
-
-
 class Graph:
     def __init__(self):
         # ID: Point
@@ -69,6 +68,8 @@ class Graph:
         self.xy = 2  # -xy, +xy
         self.r = 1.5
 
+        self.num_category = 2
+
     def get_all_labels(self):
         labels = set()
         for v in self.vertices.values():
@@ -78,7 +79,7 @@ class Graph:
 
     def build_simple_graph(self):
         features = np.random.uniform(-self.xy, self.xy, (self.num_points, 2))
-        labels = np.array([1 if np.linalg.norm(f) < self.r else 0 for f in features])
+        labels = get_labels_from_splitted_graph(features, self.num_category)
 
         for ID, (feature, label) in enumerate(zip(features, labels)):
             if ID < self.train_ratio * len(labels):
@@ -104,6 +105,8 @@ class Graph:
             color = 'red' if _get_lb(point) == 1 else 'blue'
             marker = 'o' if point.labeled else 'x'
             ax.scatter(point.feature[0], point.feature[1], c=color, marker=marker)
+
+            # visualize winding number feature
             predicted_ft = tuple([round(v, 1) for v in point.predicted_ft])
             ax.text(point.feature[0], point.feature[1],
                     str(predicted_ft), fontsize=10, ha='right')
