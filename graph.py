@@ -104,6 +104,9 @@ class Graph:
             color = 'red' if _get_lb(point) == 1 else 'blue'
             marker = 'o' if point.labeled else 'x'
             ax.scatter(point.feature[0], point.feature[1], c=color, marker=marker)
+            predicted_ft = (round(v, 1) for v in point.predicted_ft)
+            ax.text(point.feature[0], point.feature[1],
+                    str(predicted_ft), fontsize=10, ha='right')
 
         # Draw edges between points
         for (i, j) in self.edges.keys():
@@ -161,9 +164,9 @@ class Graph:
     def _generate_edges_by_knn(self, features):
         n_neighbors = NearestNeighbors(n_neighbors=self.knn_k, algorithm='auto').fit(features)
         distances, indices = n_neighbors.kneighbors(features)
-        print("indices")
-        for index, indice in enumerate(indices):
-            print(index, indice)
+        # print("indices")
+        # for index, indice in enumerate(indices):
+        #     print(index, indice)
 
         edges = set()
         for i, neighbors in enumerate(indices):
