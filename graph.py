@@ -104,6 +104,9 @@ class Graph:
             color = 'red' if _get_lb(point) == 1 else 'blue'
             marker = 'o' if point.labeled else 'x'
             ax.scatter(point.feature[0], point.feature[1], c=color, marker=marker)
+            predicted_ft = (round(v, 1) for v in point.predicted_ft)
+            ax.text(point.feature[0], point.feature[1],
+                    str(predicted_ft), fontsize=10, ha='right')
 
         # Draw edges between points
         for (i, j) in self.edges.keys():
