@@ -165,7 +165,11 @@ class Graph:
         self.strokes_ij = [(i, j) for (i, j), edge in self.edges.items() if edge.is_stroke()]
 
     def _generate_edges_by_knn(self, features):
-        n_neighbors = NearestNeighbors(n_neighbors=self.knn_k, algorithm='auto').fit(features)
+        """
+        Nearest Neighbour will contain themselves
+        So knn_k + 1
+        """
+        n_neighbors = NearestNeighbors(n_neighbors=self.knn_k + 1, algorithm='auto').fit(features)
         distances, indices = n_neighbors.kneighbors(features)
         # print("indices")
         # for index, indice in enumerate(indices):
@@ -180,8 +184,9 @@ class Graph:
                 # make sure i < j
                 if i < neighbor:
                     edges.add((i, neighbor))
-                else:
+                elif i > neighbor:
                     edges.add((neighbor, i))
+                # pass if i == neighbour
 
         for i, j in edges:
             self.edges[(i, j)] = Edge(self.vertices[i], self.vertices[j])
