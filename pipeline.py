@@ -41,6 +41,8 @@ class Pipeline:
         for stroke_direction in tqdm(sample_combinations):
             sigmas = self.get_sigmas(stroke_direction)
             wn = self.calculate_winding_numbers(laplacian, sigmas)
+            # print(stroke_direction)
+            # print(wn)
             tv = self.calculate_total_variance(wn)
             tv_wns.append(dict(
                 wn=wn,
@@ -152,9 +154,10 @@ class Pipeline:
         for (i, j), value in self.g.edges.items():
             if value.is_stroke:
                 for (_i, _j), _value in stroke_direction.items():
-                    if (self.g.get_vertex(i).label, self.g.get_vertex(j).label) == (_i, _j) or (
-                            self.g.get_vertex(j).label, self.g.get_vertex(i).label) == (_i, _j):
+                    if (self.g.get_vertex(i).label, self.g.get_vertex(j).label) == (_i, _j) :
                         sigmas[i, j] = _value
+                    elif (self.g.get_vertex(j).label, self.g.get_vertex(i).label) == (_i, _j):
+                        sigmas[j, i] = _value
 
         # print(sigmas)
         return sigmas
@@ -188,7 +191,7 @@ class Pipeline:
         # print(b_2)
         #   # least square solution
         w, residuals, rank, s = np.linalg.lstsq(A, b, rcond=None)
-        # print(w)
+        print(w)
         return w
 
     def calculate_total_variance(self, wn):
@@ -263,8 +266,8 @@ class Pipeline:
             if counts[label] > 0:
                 centroids[label] /= counts[label]
 
-        # print(centroids)
-        # print(counts)
+        print(centroids)
+        print(counts)
 
         assignments = {}
 
@@ -273,11 +276,11 @@ class Pipeline:
         for _ in tqdm(range(num_iterations)):  # Run for a fixed number of iterations
             # Step 2: Assign vertices to the nearest centroid
             for v_id, v in self.g.vertices.items():
-                if not v.labeled:
-                    closest = min(centroids, key=lambda x: np.linalg.norm(v.predicted_ft - centroids[x]))
-                    assignments[v_id] = closest
-                else:
-                    assignments[v_id] = v.label
+                # if not v.labeled:
+                closest = min(centroids, key=lambda x: np.linalg.norm(v.predicted_ft - centroids[x]))
+                assignments[v_id] = closest
+                # else:
+                #     assignments[v_id] = v.label
 
             # Step 3: Update centroids
             new_centroids = {label: np.array([0.0 for _ in range(self.predicted_ft_d)]) for label in labels}
