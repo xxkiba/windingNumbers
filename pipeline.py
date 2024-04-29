@@ -278,11 +278,11 @@ class Pipeline:
         for _ in tqdm(range(num_iterations)):  # Run for a fixed number of iterations
             # Step 2: Assign vertices to the nearest centroid
             for v_id, v in self.g.vertices.items():
-                # if not v.labeled:
-                closest = min(centroids, key=lambda x: np.linalg.norm(v.predicted_ft - centroids[x]))
-                assignments[v_id] = closest
-                # else:
-                #     assignments[v_id] = v.label
+                if not v.labeled:
+                    closest = min(centroids, key=lambda x: np.linalg.norm(v.predicted_ft - centroids[x]))
+                    assignments[v_id] = closest
+                else:
+                    assignments[v_id] = v.label
 
             # Step 3: Update centroids
             new_centroids = {label: np.array([0.0 for _ in range(self.predicted_ft_d)]) for label in labels}
