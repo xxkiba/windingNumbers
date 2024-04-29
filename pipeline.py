@@ -9,8 +9,10 @@ from graph import *
 
 
 class Pipeline:
-    def __init__(self, sample_n=100, simple=True, feature_dimension=5):
-        self.g = Graph()
+    def __init__(self, num_categories=5, num_points=100, knn_k=5, train_ratio=0.7,
+                 sample_n=100, simple=True, feature_dimension=5):
+        self.g = Graph(num_categories, num_points, knn_k, train_ratio)
+
         self.sample_n = sample_n
         self.simple = simple
         self.predicted_ft_d = feature_dimension
@@ -191,7 +193,7 @@ class Pipeline:
         # print(b_2)
         #   # least square solution
         w, residuals, rank, s = np.linalg.lstsq(A, b, rcond=None)
-        print(w)
+        # print(w)
         return w
 
     def calculate_total_variance(self, wn):
@@ -266,8 +268,8 @@ class Pipeline:
             if counts[label] > 0:
                 centroids[label] /= counts[label]
 
-        print(centroids)
-        print(counts)
+        # print(centroids)
+        # print(counts)
 
         assignments = {}
 
@@ -319,8 +321,19 @@ class Pipeline:
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
+    parser.add_argument("-c", "--categories", type=int, default=2, help="Number of categories for the graph splitter")
+    parser.add_argument("-n", "--points", type=int, default=50, help="Number of points to generate")
+    parser.add_argument("-k", "--knn_k", type=int, default=5, help="K value for KNN")
+    parser.add_argument("-t", "-r", "--train_ratio", type=float, default=0.7, help="Training ratio")
+
+    parser.add_argument("--sample_n", default=100, type=int, help="Number of sampled stroke directions")
     parser.add_argument("--hard", action="store_true")
+    parser.add_argument("-fd", "--feature_dimension", type=int, default=5, help="Feature dimension")
+
     args = parser.parse_args()
 
-    p = Pipeline(simple=not args.hard)
+    print(args)
+
+    p = Pipeline(num_categories=args.categories, num_points=args.points, knn_k=args.knn_k, train_ratio=args.train_ratio,
+                 simple=not args.hard, feature_dimension=args.feature_dimension)
     p.run()
