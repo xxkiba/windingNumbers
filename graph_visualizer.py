@@ -79,5 +79,6 @@ class GraphVisualizer:
         for point in vertices.values():
             predicted_ft = tuple([round(v, 1) for v in point.predicted_ft])
             # text = f"{predicted_ft}|{point.label}|{point.predicted_lb}"
-            text = f"{predicted_ft}|ori={point.label}|pre={point.predicted_lb}"
+            # text = f"{predicted_ft}|ori={point.label}|pre={point.predicted_lb}"
+            text = f"{predicted_ft}"
             ax.text(point.position[0], point.position[1], text, fontsize=10, ha='right')

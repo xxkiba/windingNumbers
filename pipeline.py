@@ -158,8 +158,10 @@ class Pipeline:
                 for (_i, _j), _value in stroke_direction.items():
                     if (self.g.get_vertex(i).label, self.g.get_vertex(j).label) == (_i, _j):
                         sigmas[i, j] = _value
+                        sigmas[j, i] = -_value
                     elif (self.g.get_vertex(j).label, self.g.get_vertex(i).label) == (_i, _j):
                         sigmas[j, i] = _value
+                        sigmas[i, j] = -_value
 
         # print(sigmas)
         return sigmas
@@ -183,15 +185,13 @@ class Pipeline:
             weights[k, i] = 1
             weights[k, j] = -1
 
-            if sigmas[i, j] == 0:
-                b_2[k] = sigmas[j, i]
-            else:
-                b_2[k] = sigmas[i, j]
+            b_2[k] = sigmas[i, j]
 
             # print(sigmas[i, j])
+            # print(sigmas[j, i])
             # print(i, j)
             k += 1
-        print(b_2)
+        # print(b_2)
         b_1 = np.zeros(n)
         b = np.append(b_1, b_2, axis=0)
         A = np.append(laplacian, weights, axis=0)
