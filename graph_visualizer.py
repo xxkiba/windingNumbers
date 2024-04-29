@@ -76,8 +76,8 @@ class GraphVisualizer:
 
     @staticmethod
     def visualize_feature(ax, vertices):
-        print("Texting features")
         for point in vertices.values():
             predicted_ft = tuple([round(v, 1) for v in point.predicted_ft])
-            ax.text(point.position[0], point.position[1],
-                    str(predicted_ft), fontsize=10, ha='right')
+            # text = f"{predicted_ft}|{point.label}|{point.predicted_lb}"
+            text = f"{predicted_ft}|ori={point.label}|pre={point.predicted_lb}"
+            ax.text(point.position[0], point.position[1], text, fontsize=10, ha='right')
