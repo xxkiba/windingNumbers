@@ -310,11 +310,14 @@ class Pipeline:
         self.g.visualize_simple_graph(pre=True)
 
     def cal_accuracy(self):
-        n = len(self.g.vertices)
+        n = 0
         c = 0
         for vi, v in self.g.vertices.items():
+            if v.labeled:
+                continue
             if v.label == v.predicted_lb:
                 c += 1
+            n += 1
         print(f"{c} / {n} = {round(c / n, 4)}")
 
 
