@@ -154,9 +154,9 @@ class Pipeline:
         n = len(self.g.vertices)
         sigmas = np.zeros((n, n))
         for (i, j), value in self.g.edges.items():
-            if value.is_stroke:
+            if value.is_stroke():
                 for (_i, _j), _value in stroke_direction.items():
-                    if (self.g.get_vertex(i).label, self.g.get_vertex(j).label) == (_i, _j) :
+                    if (self.g.get_vertex(i).label, self.g.get_vertex(j).label) == (_i, _j):
                         sigmas[i, j] = _value
                     elif (self.g.get_vertex(j).label, self.g.get_vertex(i).label) == (_i, _j):
                         sigmas[j, i] = _value
@@ -183,10 +183,15 @@ class Pipeline:
             weights[k, i] = 1
             weights[k, j] = -1
 
-            b_2[k] = sigmas[i, j]
+            if sigmas[i, j] == 0:
+                b_2[k] = sigmas[j, i]
+            else:
+                b_2[k] = sigmas[i, j]
+
             # print(sigmas[i, j])
             # print(i, j)
             k += 1
+        print(b_2)
         b_1 = np.zeros(n)
         b = np.append(b_1, b_2, axis=0)
         A = np.append(laplacian, weights, axis=0)
@@ -278,11 +283,11 @@ class Pipeline:
         for _ in tqdm(range(num_iterations)):  # Run for a fixed number of iterations
             # Step 2: Assign vertices to the nearest centroid
             for v_id, v in self.g.vertices.items():
-                # if not v.labeled:
-                closest = min(centroids, key=lambda x: np.linalg.norm(v.predicted_ft - centroids[x]))
-                assignments[v_id] = closest
-                # else:
-                #     assignments[v_id] = v.label
+                if not v.labeled:
+                    closest = min(centroids, key=lambda x: np.linalg.norm(v.predicted_ft - centroids[x]))
+                    assignments[v_id] = closest
+                else:
+                    assignments[v_id] = v.label
 
             # Step 3: Update centroids
             new_centroids = {label: np.array([0.0 for _ in range(self.predicted_ft_d)]) for label in labels}
