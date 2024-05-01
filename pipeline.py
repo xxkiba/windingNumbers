@@ -49,6 +49,7 @@ class Pipeline:
             tv_wns.append(dict(
                 wn=wn,
                 tv=tv,
+                sd=stroke_direction,
             ))
 
         print("Calculating features...")
@@ -232,6 +233,12 @@ class Pipeline:
         sorted_tv_wns = sorted(tv_wns, key=lambda x: x["tv"], reverse=False)
 
         top_wns = [tv_wn["wn"] for tv_wn in sorted_tv_wns[:self.predicted_ft_d]]
+
+        self.g.visualize_simple_graph_with_winding_number_heatmap_and_stroke_directions(
+            winding_numbers=sorted_tv_wns[0]["wn"],
+            stroke_directions=sorted_tv_wns[0]["sd"]
+        )
+        # quit()
 
         # d × n -> n × d
         features = list(zip(*top_wns))

@@ -74,6 +74,74 @@ class GraphVisualizer:
 
         plt.show()
 
+    def visualize_simple_graph_with_winding_number_heatmap_and_stroke_directions(
+            self, splitter: GraphSplitter, vertices, edges, get_lb_function,
+            winding_numbers, stroke_directions_from_to_tuple,
+            title="Simple Graph", display_feature=False):
+        """
+        Visualizes the graph with options to show predicted labels.
+
+        :param: winding_numbers: [wn1, wn2, ...]
+        :param: stroke_directions_from_to_tuple: [(from_v_id: to_v_id), ...]
+        """
+        fig, ax = plt.subplots()
+        ax.set_aspect('equal', adjustable='box')  # Set the aspect ratio to be equal
+
+        # Normalize winding numbers for coloring
+        norm = plt.Normalize(min(winding_numbers), max(winding_numbers))
+        cmap = plt.get_cmap('viridis')
+
+        # Draw vertices with color based on winding number
+        for vertex_id, vertex in vertices.items():
+            wn = winding_numbers[vertex_id]  # Get winding number for the vertex
+            color = cmap(norm(wn))
+            marker = 'o' if vertex.labeled else 'x'
+            ax.scatter(vertex.position[0], vertex.position[1], color=color, marker=marker)
+
+        print(sorted(stroke_directions_from_to_tuple))
+
+        # Draw edges
+        stroke_directions_set = set(stroke_directions_from_to_tuple)
+        for (i, j) in edges.keys():
+            point1 = vertices[i].position
+            point2 = vertices[j].position
+            l1 = vertices[i].label
+            l2 = vertices[j].label
+            if (((l1, l2) in stroke_directions_set or (l2, l1) in stroke_directions_set) and
+                    vertices[i].labeled) and vertices[j].labeled:
+                # Draw directed edges
+                ax.annotate("", xy=point2, xytext=point1,
+                            arrowprops=dict(
+                                arrowstyle="simple, head_width=1, head_length=2", color='cyan', lw=0.5
+                            ))
+            else:
+                # Draw undirected edges
+                ax.plot([point1[0], point2[0]], [point1[1], point2[1]], 'gray', linestyle='-', linewidth=0.5)
+
+        splitter.draw_dividers(ax)
+
+        plt.xlim(-self.xy, self.xy)
+        plt.ylim(-self.xy, self.xy)
+        plt.axhline(0, color='grey', linewidth=0.5)
+        plt.axvline(0, color='grey', linewidth=0.5)
+        plt.title(title)
+        plt.xlabel('X Coordinate')
+        plt.ylabel('Y Coordinate')
+
+        # Colorbar for winding numbers
+        sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
+        sm.set_array([])
+        fig.colorbar(sm, ax=ax, label='Winding Number')
+
+        # plt.legend([plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='g', markersize=10, label='Labeled'),
+        #             plt.Line2D([0], [0], marker='x', color='w', markerfacecolor='r', markersize=10, label='Unlabeled')],
+        #            loc='upper right')
+
+        if display_feature:
+            self.visualize_feature(ax, vertices)
+
+        plt.show()
+
     @staticmethod
     def visualize_feature(ax, vertices):
         for point in vertices.values():
