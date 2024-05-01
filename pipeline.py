@@ -358,8 +358,8 @@ class Pipeline:
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("-c", "--categories", type=int, default=2, help="Number of categories for the graph splitter")
-    parser.add_argument("-n", "--points", type=int, default=50, help="Number of points to generate")
+    parser.add_argument("-c", "--categories", type=int, default=10, help="Number of categories for the graph splitter")
+    parser.add_argument("-n", "--points", type=int, default=200, help="Number of points to generate")
     parser.add_argument("-k", "--knn_k", type=int, default=5, help="K value for KNN")
     parser.add_argument("-t", "-r", "--train_ratio", type=float, default=0.7, help="Training ratio")
 
@@ -367,7 +367,7 @@ if __name__ == '__main__':
 
     parser.add_argument("--sample_n", default=100, type=int, help="Number of sampled stroke directions")
     parser.add_argument("--hard", action="store_true")
-    parser.add_argument("-fd", "--feature_dimension", type=int, default=5, help="Feature dimension")
+    parser.add_argument("-fd", "--feature_dimension", type=int, default=10, help="Feature dimension")
 
     parser.add_argument("--text", action="store_true")
     parser.add_argument("--save_img", action="store_true")
