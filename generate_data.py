@@ -15,6 +15,8 @@ def get_graph_spitter(num_categories, num_points):
         return TwoCategorySplitter(num_categories, num_points)
     elif num_categories == 5:
         return FiveCategorySplitter(num_categories, num_points)
+    elif num_categories == 10:
+        return TenCategorySplitter(num_categories, num_points)
     else:
         raise ValueError("Unsupported number of categories")
 
@@ -102,6 +104,50 @@ class FiveCategorySplitter(GraphSplitter):
 
         for start, end in zip(points, ends):
             ax.plot([start[0], end[0]], [start[1], end[1]], color=self.divider_color, linestyle='--')
+
+
+class TenCategorySplitter(GraphSplitter):
+    """
+    Split the graph into ten sectors within a central circle.
+    Each sector is formed by splitting the circle into 10 equal parts of 36 degrees each.
+    """
+
+    def split_graph_and_generate_points(self):
+        positions = self.generate_positions()
+        labels = []
+        for p in positions:
+            angle = np.arctan2(p[1], p[0]) % (2 * np.pi)  # Normalize angle to be between 0 and 2*pi
+            sector = int(angle / (2 * np.pi / 10)) + 1  # Divide the circle into 10 equal parts
+            labels.append(sector)
+
+        return positions, np.array(labels)
+
+    def draw_dividers(self, ax):
+        # Assume self.xy is the extent of the plot boundary
+        boundary_x = self.xy
+        boundary_y = self.xy
+
+        for i in range(10):
+            angle = 2 * np.pi * i / 10
+            # Assuming the plot boundary is centered at the origin and equal in all directions
+            if -np.pi / 4 <= angle < np.pi / 4 or 3 * np.pi / 4 <= angle < 5 * np.pi / 4:
+                # Right or left boundary
+                end_x = boundary_x if np.cos(angle) > 0 else -boundary_x
+                end_y = end_x * np.tan(angle)
+            else:
+                # Top or bottom boundary
+                end_y = boundary_y if np.sin(angle) > 0 else -boundary_y
+                end_x = end_y / np.tan(angle)
+
+            # Check if the computed point exceeds the boundary, and adjust
+            if abs(end_y) > boundary_y:
+                end_y = boundary_y if end_y > 0 else -boundary_y
+                end_x = end_y / np.tan(angle)
+            if abs(end_x) > boundary_x:
+                end_x = boundary_x if end_x > 0 else -boundary_x
+                end_y = end_x * np.tan(angle)
+
+            ax.plot([0, end_x], [0, end_y], color=self.divider_color, linestyle='--')
 
 
 def main():
