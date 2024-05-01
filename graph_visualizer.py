@@ -24,7 +24,7 @@ class GraphVisualizer:
         return colors[label % num_categories]
 
     def visualize_simple_graph(self, splitter: GraphSplitter, vertices, edges, get_lb_function,
-                               title="Simple Graph", display_feature=False):
+                               title="Simple Graph", display_text=False):
         """
         Visualizes the graph with options to show predicted labels.
         """
@@ -69,8 +69,13 @@ class GraphVisualizer:
         # ax.scatter([], [], c='blue', marker='ox', label='Labeled Outside')
         plt.legend(loc='upper right')
 
-        if display_feature:
-            self.visualize_feature(ax, vertices)
+        if display_text:
+            for point in vertices.values():
+                predicted_ft = tuple([round(v, 1) for v in point.predicted_ft])
+                # text = f"{predicted_ft}|{point.label}|{point.predicted_lb}"
+                # text = f"{predicted_ft}|ori={point.label}|pre={point.predicted_lb}"
+                text = f"{predicted_ft}"
+                ax.text(point.position[0], point.position[1], text, fontsize=10, ha='right')
 
         plt.show()
 
@@ -148,15 +153,8 @@ class GraphVisualizer:
         #            loc='upper right')
 
         if display_feature:
-            self.visualize_feature(ax, vertices)
+            for point, wn in zip(vertices.values(), winding_numbers):
+                text = f"{round(wn, 2)}"
+                ax.text(point.position[0], point.position[1], text, fontsize=10, ha='right')
 
         plt.show()
-
-    @staticmethod
-    def visualize_feature(ax, vertices):
-        for point in vertices.values():
-            predicted_ft = tuple([round(v, 1) for v in point.predicted_ft])
-            # text = f"{predicted_ft}|{point.label}|{point.predicted_lb}"
-            # text = f"{predicted_ft}|ori={point.label}|pre={point.predicted_lb}"
-            text = f"{predicted_ft}"
-            ax.text(point.position[0], point.position[1], text, fontsize=10, ha='right')

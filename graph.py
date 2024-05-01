@@ -107,7 +107,7 @@ class Graph:
             get_lb_function=_get_lb,
             title=f"Graph Visualization\n"
                   f"CLS={self.num_categories}, N={self.num_points}, K={self.knn_k}, TrainRatio={self.train_ratio}",
-            display_feature=pre and self.print_text,
+            display_text=pre and self.print_text,
         )
 
         plt.show()
