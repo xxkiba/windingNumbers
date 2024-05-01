@@ -9,9 +9,9 @@ from graph import *
 
 
 class Pipeline:
-    def __init__(self, num_categories=5, num_points=100, knn_k=5, train_ratio=0.7,
+    def __init__(self, num_categories=5, num_points=100, knn_k=5, train_ratio=0.7, print_text=False,
                  sample_n=100, simple=True, feature_dimension=5):
-        self.g = Graph(num_categories, num_points, knn_k, train_ratio)
+        self.g = Graph(num_categories, num_points, knn_k, train_ratio, print_text=print_text)
 
         self.sample_n = sample_n
         self.simple = simple
@@ -342,10 +342,13 @@ if __name__ == '__main__':
     parser.add_argument("--hard", action="store_true")
     parser.add_argument("-fd", "--feature_dimension", type=int, default=5, help="Feature dimension")
 
+    parser.add_argument("--text", action="store_true")
+
     args = parser.parse_args()
 
     print(args)
 
     p = Pipeline(num_categories=args.categories, num_points=args.points, knn_k=args.knn_k, train_ratio=args.train_ratio,
+                 print_text=args.text,
                  simple=not args.hard, feature_dimension=args.feature_dimension)
     p.run()
