@@ -1,11 +1,16 @@
+import os
+
 from matplotlib import pyplot as plt
 
 from generate_data import GraphSplitter, XY
 
 
 class GraphVisualizer:
-    def __init__(self):
+    def __init__(self, save_img=False):
         self.xy = XY
+        self.save_img = save_img
+        self.dir_img = "images/"
+        os.makedirs(self.dir_img, exist_ok=True)
 
     @staticmethod
     def get_category_color_from_cmap(label, num_categories):
@@ -77,12 +82,18 @@ class GraphVisualizer:
                 text = f"{predicted_ft}"
                 ax.text(point.position[0], point.position[1], text, fontsize=10, ha='right')
 
-        plt.show()
+        if self.save_img:
+            if display_text:
+                title = title + "_with_predicted_ft"
+            suffix = title.replace("\n", '_')
+            plt.savefig(f"{self.dir_img}/results__{suffix}.png")
+        else:
+            plt.show()
 
     def visualize_simple_graph_with_winding_number_heatmap_and_stroke_directions(
             self, splitter: GraphSplitter, vertices, edges, get_lb_function,
             winding_numbers, stroke_directions_from_to_tuple,
-            title="Simple Graph", display_feature=False):
+            title="Simple Graph", display_text=False):
         """
         Visualizes the graph with options to show predicted labels.
 
@@ -152,9 +163,15 @@ class GraphVisualizer:
         #             plt.Line2D([0], [0], marker='x', color='w', markerfacecolor='r', markersize=10, label='Unlabeled')],
         #            loc='upper right')
 
-        if display_feature:
+        if display_text:
             for point, wn in zip(vertices.values(), winding_numbers):
                 text = f"{round(wn, 2)}"
                 ax.text(point.position[0], point.position[1], text, fontsize=10, ha='right')
 
-        plt.show()
+        if self.save_img:
+            if display_text:
+                title = title + "_with_winding_number"
+            suffix = title.replace("\n", '_')
+            plt.savefig(f"{self.dir_img}/winding_number_with_stroke_direction__{suffix}.png")
+        else:
+            plt.show()

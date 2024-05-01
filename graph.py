@@ -53,7 +53,7 @@ class Edge:
 
 
 class Graph:
-    def __init__(self, num_categories=2, num_points=50, knn_k=5, train_ratio=0.7, print_text=False):
+    def __init__(self, num_categories=2, num_points=50, knn_k=5, train_ratio=0.7, save_img=False, print_text=False):
         # ID: Point
         self.vertices = {}
         # (i, j) -> edge
@@ -68,7 +68,7 @@ class Graph:
         self.print_text = print_text
 
         self.splitter = generate_data.get_graph_spitter(self.num_categories, self.num_points)
-        self.visualizer = graph_visualizer.GraphVisualizer()
+        self.visualizer = graph_visualizer.GraphVisualizer(save_img=save_img)
 
     def get_all_labels(self):
         labels = set()
@@ -137,7 +137,7 @@ class Graph:
             get_lb_function=_get_lb,
             title=f"Graph Visualization\n"
                   f"CLS={self.num_categories}, N={self.num_points}, K={self.knn_k}, TrainRatio={self.train_ratio}",
-            display_feature=self.print_text,
+            display_text=self.print_text,
         )
 
 
