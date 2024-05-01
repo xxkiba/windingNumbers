@@ -98,17 +98,27 @@ class GraphVisualizer:
             marker = 'o' if vertex.labeled else 'x'
             ax.scatter(vertex.position[0], vertex.position[1], color=color, marker=marker)
 
-        print(sorted(stroke_directions_from_to_tuple))
+        # print(sorted(stroke_directions_from_to_tuple))
 
         # Draw edges
         stroke_directions_set = set(stroke_directions_from_to_tuple)
-        for (i, j) in edges.keys():
+        for (i, j), edge in edges.items():
+
             point1 = vertices[i].position
             point2 = vertices[j].position
-            l1 = vertices[i].label
-            l2 = vertices[j].label
-            if (((l1, l2) in stroke_directions_set or (l2, l1) in stroke_directions_set) and
-                    vertices[i].labeled) and vertices[j].labeled:
+
+            if edge.is_stroke():
+                l1 = vertices[i].label
+                l2 = vertices[j].label
+
+                if (l1, l2) in stroke_directions_set:
+                   pass
+                else:
+                    assert (l2, l1) in stroke_directions_set
+                    # change direction
+                    point1 = vertices[j].position
+                    point2 = vertices[i].position
+
                 # Draw directed edges
                 ax.annotate("", xy=point2, xytext=point1,
                             arrowprops=dict(
