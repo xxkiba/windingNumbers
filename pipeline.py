@@ -246,8 +246,7 @@ class Pipeline:
         top_wns = [tv_wn["wn"] for tv_wn in sorted_tv_wns[:self.predicted_ft_d]]
 
         if self.simple:
-            suffix = f"Feature Dimension={self.predicted_ft_d}, " \
-                     f"Sample Stroke Directions Num={self.sample_n}\n"
+            suffix = f"Sample Stroke Directions Num={self.sample_n}\n"
             self.g.visualize_simple_graph_with_winding_number_heatmap_and_stroke_directions(
                 winding_numbers=sorted_tv_wns[0]["wn"],
                 stroke_directions=sorted_tv_wns[0]["sd"],
