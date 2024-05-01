@@ -122,7 +122,7 @@ class GraphVisualizer:
                 # Draw directed edges
                 ax.annotate("", xy=point2, xytext=point1,
                             arrowprops=dict(
-                                arrowstyle="simple, head_width=0.5, head_length=1", color='cyan', lw=0.5
+                                arrowstyle="simple, head_width=0.7, head_length=1.2", color='cyan', lw=0.2
                             ))
             else:
                 # Draw undirected edges
