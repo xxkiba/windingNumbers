@@ -134,6 +134,8 @@ class Pipeline:
                 # print(i, j)
                 adj[i, j] = Point.gaussian_similarity(self.g.vertices[i], self.g.vertices[j], 1)
                 adj[j, i] = Point.gaussian_similarity(self.g.vertices[i], self.g.vertices[j], 1)
+                # adj[i, j] = 1
+                # adj[j, i] = 1
 
         degrees = np.zeros((n, n))
 
@@ -141,6 +143,7 @@ class Pipeline:
             degrees[i, i] = np.sum(adj[i, :])
 
         laplacian = degrees - adj
+        # print(laplacian)
 
         return laplacian
 
@@ -191,7 +194,7 @@ class Pipeline:
             # print(sigmas[j, i])
             # print(i, j)
             k += 1
-        # print(b_2)
+
         b_1 = np.zeros(n)
         b = np.append(b_1, b_2, axis=0)
         A = np.append(laplacian, weights, axis=0)
@@ -199,6 +202,7 @@ class Pipeline:
         #   # least square solution
         w, residuals, rank, s = np.linalg.lstsq(A, b, rcond=None)
         # print(w)
+        # print(max(w))
         return w
 
     def calculate_total_variance(self, wn):
@@ -225,7 +229,7 @@ class Pipeline:
         :return: ft: (|V|, dimension)
         """
 
-        sorted_tv_wns = sorted(tv_wns, key=lambda x: x["tv"], reverse=True)
+        sorted_tv_wns = sorted(tv_wns, key=lambda x: x["tv"], reverse=False)
 
         top_wns = [tv_wn["wn"] for tv_wn in sorted_tv_wns[:self.predicted_ft_d]]
 
