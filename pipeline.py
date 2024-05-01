@@ -234,11 +234,11 @@ class Pipeline:
 
         top_wns = [tv_wn["wn"] for tv_wn in sorted_tv_wns[:self.predicted_ft_d]]
 
-        self.g.visualize_simple_graph_with_winding_number_heatmap_and_stroke_directions(
-            winding_numbers=sorted_tv_wns[0]["wn"],
-            stroke_directions=sorted_tv_wns[0]["sd"]
-        )
-        # quit()
+        if self.simple:
+            self.g.visualize_simple_graph_with_winding_number_heatmap_and_stroke_directions(
+                winding_numbers=sorted_tv_wns[0]["wn"],
+                stroke_directions=sorted_tv_wns[0]["sd"]
+            )
 
         # d × n -> n × d
         features = list(zip(*top_wns))
