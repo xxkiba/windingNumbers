@@ -9,14 +9,19 @@ from graph import *
 
 
 class Pipeline:
-    def __init__(self, num_categories=5, num_points=100, knn_k=5, train_ratio=0.7, save_img=False, print_text=False,
+    def __init__(self, num_categories=5, num_points=100, knn_k=5, train_ratio=0.7, kmeans_iterations=10,
+                 save_img=False, print_text=False,
                  sample_n=100, simple=True, feature_dimension=5):
         self.g = Graph(num_categories, num_points, knn_k, train_ratio,
                        save_img=save_img, print_text=print_text)
 
-        self.sample_n = sample_n
         self.simple = simple
+
+        self.sample_n = sample_n
+
         self.predicted_ft_d = feature_dimension
+
+        self.kmeans_iterations = kmeans_iterations
 
     def run(self):
         if self.simple:
@@ -271,11 +276,13 @@ class Pipeline:
         for vi, lb in assignments.items():
             self.g.vertices[vi].predicted_lb = lb
 
-    def cluster_by_kmeans(self, num_iterations=5):
+    def cluster_by_kmeans(self):
         """
 
         :return: assignments: {vid: lb}, centroids
         """
+
+        num_iterations = self.kmeans_iterations
 
         # Step 1: Initialize centroids
         labels = set(v.label for v in self.g.vertices.values() if v.labeled)
@@ -356,6 +363,8 @@ if __name__ == '__main__':
     parser.add_argument("-k", "--knn_k", type=int, default=5, help="K value for KNN")
     parser.add_argument("-t", "-r", "--train_ratio", type=float, default=0.7, help="Training ratio")
 
+    parser.add_argument("-i", "--iter_kmeans", type=int, default=10, help="Kmeans Iterations")
+
     parser.add_argument("--sample_n", default=100, type=int, help="Number of sampled stroke directions")
     parser.add_argument("--hard", action="store_true")
     parser.add_argument("-fd", "--feature_dimension", type=int, default=5, help="Feature dimension")
@@ -368,6 +377,7 @@ if __name__ == '__main__':
     print(args)
 
     p = Pipeline(num_categories=args.categories, num_points=args.points, knn_k=args.knn_k, train_ratio=args.train_ratio,
+                 kmeans_iterations=args.iter_kmeans,
                  save_img=args.save_img,
                  print_text=args.text,
                  simple=not args.hard, feature_dimension=args.feature_dimension)
