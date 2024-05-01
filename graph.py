@@ -90,7 +90,7 @@ class Graph:
 
         self.strokes_ij = [(i, j) for (i, j), edge in self.edges.items() if edge.is_stroke()]
 
-    def visualize_simple_graph(self, pre=False):
+    def visualize_simple_graph(self, pre=False, suffix=""):
         # pre=True means show predicted labels
 
         if pre:
@@ -100,20 +100,24 @@ class Graph:
             def _get_lb(p: Point):
                 return p.label
 
+        title = f"Graph Visualization\n" \
+                f"CLS={self.num_categories}, N={self.num_points}, K={self.knn_k}, TrainRatio={self.train_ratio}"
+        if suffix:
+            title = f"{title}\n{suffix}"
+
         self.visualizer.visualize_simple_graph(
             splitter=self.splitter,
             vertices=self.vertices,
             edges=self.edges,
             get_lb_function=_get_lb,
-            title=f"Graph Visualization\n"
-                  f"CLS={self.num_categories}, N={self.num_points}, K={self.knn_k}, TrainRatio={self.train_ratio}",
+            title=title,
             display_text=pre and self.print_text,
         )
 
         plt.show()
 
     def visualize_simple_graph_with_winding_number_heatmap_and_stroke_directions(
-            self, winding_numbers, stroke_directions
+            self, winding_numbers, stroke_directions, suffix="",
     ):
         """
         :param: winding_numbers: [wn1, wn2, ...]
@@ -128,6 +132,11 @@ class Graph:
             for (from_id, to_id), dir_val in stroke_directions.items()
         ]
 
+        title = f"Graph Visualization\n" \
+                f"CLS={self.num_categories}, N={self.num_points}, K={self.knn_k}, TrainRatio={self.train_ratio}"
+        if suffix:
+            title = f"{title}\n{suffix}"
+
         self.visualizer.visualize_simple_graph_with_winding_number_heatmap_and_stroke_directions(
             splitter=self.splitter,
             vertices=self.vertices,
@@ -135,11 +144,9 @@ class Graph:
             winding_numbers=winding_numbers,
             stroke_directions_from_to_tuple=stroke_directions_from_to_tuple,
             get_lb_function=_get_lb,
-            title=f"Graph Visualization\n"
-                  f"CLS={self.num_categories}, N={self.num_points}, K={self.knn_k}, TrainRatio={self.train_ratio}",
+            title=title,
             display_text=self.print_text,
         )
-
 
     def build_graph(self, regenerate=False):
 
@@ -201,7 +208,6 @@ class Graph:
 
 
 if __name__ == '__main__':
-
     parser = argparse.ArgumentParser()
     parser.add_argument("--hard", action="store_true")
     parser.add_argument("-c", "--categories", type=int, default=2, help="Number of categories for the graph splitter")

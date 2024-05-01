@@ -64,7 +64,12 @@ class Pipeline:
 
         print("Done! Summarizing results...")
         if self.simple:
-            self.g.visualize_simple_graph(pre=True)
+            acc = self.cal_accuracy()
+            suffix = f"Feature Dimension={self.predicted_ft_d}, " \
+                     f"Sample Stroke Directions Num={self.sample_n}\n" \
+                     f"Acc={acc}"
+            self.g.visualize_simple_graph(pre=True, suffix=suffix)
+
         else:
             self.cal_accuracy()
 
@@ -236,9 +241,12 @@ class Pipeline:
         top_wns = [tv_wn["wn"] for tv_wn in sorted_tv_wns[:self.predicted_ft_d]]
 
         if self.simple:
+            suffix = f"Feature Dimension={self.predicted_ft_d}, " \
+                     f"Sample Stroke Directions Num={self.sample_n}\n"
             self.g.visualize_simple_graph_with_winding_number_heatmap_and_stroke_directions(
                 winding_numbers=sorted_tv_wns[0]["wn"],
-                stroke_directions=sorted_tv_wns[0]["sd"]
+                stroke_directions=sorted_tv_wns[0]["sd"],
+                suffix=suffix,
             )
 
         # d × n -> n × d
@@ -335,7 +343,9 @@ class Pipeline:
             if v.label == v.predicted_lb:
                 c += 1
             n += 1
-        print(f"{c} / {n} = {round(c / n, 4)}")
+        acc = round(c / n, 4)
+        print(f"{c} / {n} = {acc}")
+        return acc
 
 
 if __name__ == '__main__':
