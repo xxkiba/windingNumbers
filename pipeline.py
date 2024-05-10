@@ -9,12 +9,30 @@ from tqdm import tqdm
 from graph import *
 
 
+def convert_seconds_to_hms(seconds):
+    # if seconds < 1:
+    #     return f"{round(seconds, 4)}s"
+    if seconds <= 60:
+        return f"{round(seconds, 2)}"
+
+    seconds = int(seconds)
+    hours = seconds // 3600
+    minutes = (seconds % 3600) // 60
+    seconds = seconds % 60
+    return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+
+
 class Pipeline:
     def __init__(self, num_categories=5, num_points=100, knn_k=5, train_ratio=0.7, kmeans_iterations=10,
                  save_img=False, print_text=False,
                  sample_n=100, simple=True, feature_dimension=5):
         self.g = Graph(num_categories, num_points, knn_k, train_ratio,
                        save_img=save_img, print_text=print_text)
+
+        self.c = num_categories
+        self.n = num_points
+        self.k = knn_k
+        self.r = train_ratio
 
         self.simple = simple
 
@@ -71,13 +89,17 @@ class Pipeline:
         self.predict_labels(fts)
 
         print("===========")
-        print(f"{round(time.time() - start_t, 4)}s")
+        t_str = convert_seconds_to_hms(time.time() - start_t)
+        print(f"{t_str}s")
         print("===========")
 
         print("Done! Summarizing results...")
-        if self.simple:
-            acc = self.cal_accuracy()
 
+        acc = self.cal_accuracy()
+
+        print(f"{self.n} & {self.k} & {self.r} & {self.sample_n} & {self.predicted_ft_d} & \\textbf{{{acc:.2f}}} & {t_str} \\\\ \\hline")
+
+        if self.simple:
             suffix = f"Feature Dimension={self.predicted_ft_d}, " \
                      f"Acc={acc}"
             self.g.visualize_simple_graph_with_winding_number_heatmap_and_stroke_directions(
@@ -91,8 +113,6 @@ class Pipeline:
                      f"Acc={acc}"
             self.g.visualize_simple_graph(pre=True, suffix=suffix)
 
-        else:
-            self.cal_accuracy()
 
     def generate_sampled_combinations(self, labels):
         # Generate all pairs of labels
