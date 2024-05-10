@@ -1,6 +1,7 @@
 import argparse
 import itertools
 import random
+import time
 
 import numpy as np
 from tqdm import tqdm
@@ -44,6 +45,8 @@ class Pipeline:
         print(len(sample_combinations))
         print(sample_combinations[0])
 
+        start_t = time.time()
+
         print("Start Solving Equation Systems...")
         tv_wns = []
         for stroke_direction in tqdm(sample_combinations):
@@ -66,6 +69,10 @@ class Pipeline:
         # fts = [p.feature for p in self.g.vertices.values()]
         print("Kmeans...")
         self.predict_labels(fts)
+
+        print("===========")
+        print(f"{round(time.time() - start_t, 4)}s")
+        print("===========")
 
         print("Done! Summarizing results...")
         if self.simple:
