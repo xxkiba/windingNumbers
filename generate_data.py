@@ -2,6 +2,8 @@ import argparse
 
 import numpy as np
 from matplotlib import pyplot as plt
+from matplotlib.patches import Ellipse, PathPatch
+from matplotlib.path import Path
 
 """
 rectangle: -XY -> XY
@@ -11,13 +13,17 @@ R = 6  # 2
 
 
 def get_graph_spitter(num_categories, num_points):
-    if num_categories == 2:
-        return TwoCategorySplitter(num_categories, num_points)
-    elif num_categories == 5:
-        return FiveCategorySplitter(num_categories, num_points)
-    elif num_categories == 10:
-        return TenCategorySplitter(num_categories, num_points)
-    else:
+
+    SplitterClassDict = {
+        2: TwoCategorySplitter,
+        3: ThreeCategorySplitter,
+        5: FiveCategorySplitter,
+        10: TenCategorySplitter,
+    }
+
+    try:
+        return SplitterClassDict[num_categories](num_categories, num_points)
+    except KeyError:
         raise ValueError("Unsupported number of categories")
 
 
@@ -63,6 +69,58 @@ class TwoCategorySplitter(GraphSplitter):
     def draw_dividers(self, ax):
         circle = plt.Circle((0, 0), self.r, color=self.divider_color, fill=False, linestyle='--')
         ax.add_artist(circle)
+
+
+class ThreeCategorySplitter(GraphSplitter):
+    """
+    Split the graph into three categories:
+    1. Left of the S-curve
+    2. Inside an ellipse
+    3. Outside the ellipse and right of the S-curve
+
+    Uses instance attributes to control the shapes and positions of the dividers.
+    """
+    def __init__(self, num_categories, num_points):
+        super().__init__(num_categories, num_points)
+        self.s_curve_func = lambda x: 2 * np.sin(x) - 3  # Lowering the S-curve
+        self.ellipse_center = (0, 3)  # Center of the ellipse higher in the y-axis
+        self.ellipse_axes = (7, 4)  # Increased semi-major (a) and semi-minor (b) axes
+
+    def split_graph_and_generate_points(self):
+        positions = self.generate_positions()
+        labels = []
+        for p in positions:
+            if self.is_below_s_curve(p):
+                labels.append(0)  # Left of the S-curve
+            elif self.is_inside_ellipse(p):
+                labels.append(1)  # Inside the ellipse
+            else:
+                labels.append(2)  # Outside the ellipse and right of the S-curve
+        return positions, np.array(labels)
+
+    def is_below_s_curve(self, point):
+        x, y = point
+        s_curve_y = self.s_curve_func(x)  # Using the function for the S-curve
+        return y < s_curve_y
+
+    def is_inside_ellipse(self, point):
+        x, y = point
+        center_x, center_y = self.ellipse_center
+        a, b = self.ellipse_axes
+        ellipse_eq = ((x - center_x)**2 / a**2) + ((y - center_y)**2 / b**2)
+        return ellipse_eq < 1
+
+    def draw_dividers(self, ax):
+        x_vals = np.linspace(-10, 10, 400)
+        y_vals = self.s_curve_func(x_vals)
+        ax.plot(x_vals, y_vals, color='red', linestyle='--', label='Lowered S-curve')
+
+        ellipse = Ellipse(self.ellipse_center, 2*self.ellipse_axes[0], 2*self.ellipse_axes[1], color='blue', fill=False, linestyle='--', label='Larger Ellipse')
+        ax.add_patch(ellipse)
+
+        ax.set_xlim(-10, 10)
+        ax.set_ylim(-10, 10)
+        ax.legend()
 
 
 class FiveCategorySplitter(GraphSplitter):
