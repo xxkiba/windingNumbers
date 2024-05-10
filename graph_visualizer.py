@@ -128,7 +128,7 @@ class GraphVisualizer:
                 l2 = vertices[j].label
 
                 if (l1, l2) in stroke_directions_set:
-                   pass
+                    pass
                 else:
                     assert (l2, l1) in stroke_directions_set
                     # change direction
