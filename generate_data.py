@@ -113,14 +113,18 @@ class ThreeCategorySplitter(GraphSplitter):
     def draw_dividers(self, ax):
         x_vals = np.linspace(-10, 10, 400)
         y_vals = self.s_curve_func(x_vals)
-        ax.plot(x_vals, y_vals, color='red', linestyle='--', label='Lowered S-curve')
+        ax.plot(x_vals, y_vals, color='red', linestyle='--')
+        # ax.plot(x_vals, y_vals, color='red', linestyle='--', label='Lowered S-curve')
 
-        ellipse = Ellipse(self.ellipse_center, 2*self.ellipse_axes[0], 2*self.ellipse_axes[1], color='blue', fill=False, linestyle='--', label='Larger Ellipse')
+        # ellipse = Ellipse(self.ellipse_center, 2*self.ellipse_axes[0], 2*self.ellipse_axes[1], color='blue',
+        # fill=False, linestyle='--', label='Larger Ellipse')
+        ellipse = Ellipse(self.ellipse_center, 2 * self.ellipse_axes[0], 2 * self.ellipse_axes[1], color='blue',
+                          fill=False, linestyle='--')
         ax.add_patch(ellipse)
 
         ax.set_xlim(-10, 10)
         ax.set_ylim(-10, 10)
-        ax.legend()
+        # ax.legend()
 
 
 class FiveCategorySplitter(GraphSplitter):
