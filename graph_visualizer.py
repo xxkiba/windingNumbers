@@ -82,6 +82,8 @@ class GraphVisualizer:
                 text = f"{predicted_ft}"
                 ax.text(point.position[0], point.position[1], text, fontsize=10, ha='right')
 
+        plt.tight_layout()
+
         if self.save_img:
             if display_text:
                 title = title + "_with_predicted_ft"
@@ -167,6 +169,8 @@ class GraphVisualizer:
             for point, wn in zip(vertices.values(), winding_numbers):
                 text = f"{round(wn, 2)}"
                 ax.text(point.position[0], point.position[1], text, fontsize=10, ha='right')
+
+        plt.tight_layout()
 
         if self.save_img:
             if display_text:

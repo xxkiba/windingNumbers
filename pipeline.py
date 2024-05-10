@@ -70,6 +70,15 @@ class Pipeline:
         print("Done! Summarizing results...")
         if self.simple:
             acc = self.cal_accuracy()
+
+            suffix = f"Feature Dimension={self.predicted_ft_d}, " \
+                     f"Acc={acc}"
+            self.g.visualize_simple_graph_with_winding_number_heatmap_and_stroke_directions(
+                winding_numbers=self.save_for_draw["wns"],
+                stroke_directions=self.save_for_draw["sds"],
+                suffix=suffix,
+            )
+
             suffix = f"Feature Dimension={self.predicted_ft_d}, " \
                      f"Sample Stroke Directions Num={self.sample_n}\n" \
                      f"Acc={acc}"
@@ -245,13 +254,10 @@ class Pipeline:
 
         top_wns = [tv_wn["wn"] for tv_wn in sorted_tv_wns[:self.predicted_ft_d]]
 
-        if self.simple:
-            suffix = f"Sample Stroke Directions Num={self.sample_n}\n"
-            self.g.visualize_simple_graph_with_winding_number_heatmap_and_stroke_directions(
-                winding_numbers=sorted_tv_wns[0]["wn"],
-                stroke_directions=sorted_tv_wns[0]["sd"],
-                suffix=suffix,
-            )
+        self.save_for_draw = dict(
+            wns=sorted_tv_wns[0]["wn"],
+            sds=sorted_tv_wns[0]["sd"],
+        )
 
         # d × n -> n × d
         features = list(zip(*top_wns))
@@ -355,7 +361,6 @@ class Pipeline:
 
 
 if __name__ == '__main__':
-
     parser = argparse.ArgumentParser()
     parser.add_argument("-c", "--categories", type=int, default=10, help="Number of categories for the graph splitter")
     parser.add_argument("-n", "--points", type=int, default=200, help="Number of points to generate")
@@ -377,6 +382,7 @@ if __name__ == '__main__':
 
     p = Pipeline(num_categories=args.categories, num_points=args.points, knn_k=args.knn_k, train_ratio=args.train_ratio,
                  kmeans_iterations=args.iter_kmeans,
+                 sample_n=args.sample_n,
                  save_img=args.save_img,
                  print_text=args.text,
                  simple=not args.hard, feature_dimension=args.feature_dimension)
