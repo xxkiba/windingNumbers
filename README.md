@@ -14,7 +14,7 @@ Finally, we performed multi-region segmentation on an embedding space and test w
 - load_data.py
   - Load MNIST dataset
   - Embed images with OpenClip
-  - Generate points with features and labels
+  - Generate points with embeddings and labels
 - generate_data.py
   - Generate points of simple graphs
     - Split area into different parts based on some rules 
