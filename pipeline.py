@@ -113,7 +113,6 @@ class Pipeline:
                      f"Acc={acc}"
             self.g.visualize_simple_graph(pre=True, suffix=suffix)
 
-
     def generate_sampled_combinations(self, labels):
         # Generate all pairs of labels
         label_pairs = list(itertools.combinations(labels, 2))
@@ -305,7 +304,7 @@ class Pipeline:
 
     def cluster_by_kmeans(self):
         """
-
+        semi-supervised Kmeans
         :return: assignments: {vid: lb}, centroids
         """
 
