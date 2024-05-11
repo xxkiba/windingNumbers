@@ -199,7 +199,8 @@ class Pipeline:
         """
 
         :param: stroke_direction: {(label1, label2): ±1}
-        :return: sigmas: sigma vector ( |S|, 1), value = ±1
+        :return: sigmas: Matrix with opposite values on symmetric positions across the diagonal
+        i.e. sigma[i, j] = -sigma[j, i]
         """
         # print("strokes ", stroke_direction)
         n = len(self.g.vertices)
@@ -238,19 +239,13 @@ class Pipeline:
 
             b_2[k] = sigmas[i, j]
 
-            # print(sigmas[i, j])
-            # print(sigmas[j, i])
-            # print(i, j)
             k += 1
 
         b_1 = np.zeros(n)
         b = np.append(b_1, b_2, axis=0)
         A = np.append(laplacian, weights, axis=0)
-        # print(b_2)
-        #   # least square solution
+        # least square solution
         w, residuals, rank, s = np.linalg.lstsq(A, b, rcond=None)
-        # print(w)
-        # print(max(w))
         return w
 
     def calculate_total_variance(self, wn):
