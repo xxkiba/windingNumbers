@@ -6,8 +6,27 @@ import time
 import numpy as np
 from tqdm import tqdm
 
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from sklearn.model_selection import train_test_split
+
 from graph import *
 
+class MLPClassifier(nn.Module):
+    def __init__(self, input_dim, hidden_dim, output_dim):
+        super(MLPClassifier, self).__init__()
+        self.fc1 = nn.Linear(input_dim, hidden_dim)
+        self.relu = nn.ReLU()
+        self.fc2 = nn.Linear(hidden_dim, output_dim)
+        self.softmax = nn.Softmax(dim=1)
+    
+    def forward(self, x):
+        x = self.fc1(x)
+        x = self.relu(x)
+        x = self.fc2(x)
+        x = self.softmax(x)
+        return x
 
 def convert_seconds_to_hms(seconds):
     # if seconds < 1:
@@ -35,6 +54,7 @@ class Pipeline:
         self.r = train_ratio
 
         self.simple = simple
+        print("simple: ",simple)
 
         self.sample_n = sample_n
 
@@ -54,10 +74,10 @@ class Pipeline:
 
         print("Generating sampled stroke direction combinations...")
         labels = self.g.get_all_labels()
-        # all_combinations = list(self.generate_combinations(labels))
-        # # print(all_combinations)
-        # # [{(0, 1): -1}, {(0, 1): 1}]
-        # sample_combinations = random.sample(all_combinations, min(len(all_combinations), self.sample_n))
+        #all_combinations = list(self.generate_combinations(labels))
+        # print(all_combinations)
+        # [{(0, 1): -1}, {(0, 1): 1}]
+        #sample_combinations = random.sample(all_combinations, min(len(all_combinations), self.sample_n))
 
         sample_combinations = self.generate_sampled_combinations(labels)
         print(len(sample_combinations))
@@ -80,13 +100,17 @@ class Pipeline:
             ))
 
         print("Calculating features...")
-        fts = self.get_features(tv_wns)
+        #fts = self.get_features(tv_wns)
 
-        # print(fts)
-
+        #print(fts)
+        #embs = [v.position for v in self.g.vertices.values()]
+        fts = [v.position for v in self.g.vertices.values()]
+        #print(embs)
         # fts = [p.feature for p in self.g.vertices.values()]
         print("Kmeans...")
-        self.predict_labels(fts)
+        #self.predict_labels(fts)
+        #self.predict_labels_by_emb(embs)
+        self.predict_labels_by_mlp(fts)
 
         print("===========")
         t_str = convert_seconds_to_hms(time.time() - start_t)
@@ -363,6 +387,193 @@ class Pipeline:
             # self.visualize_results()
 
         return assignments, centroids
+
+
+    def predict_labels_by_emb(self, embs):
+        """
+        spectral cluster to assign labels to vertices
+
+        :return:
+        """
+
+        for i, emb in enumerate(embs):
+            self.g.vertices[i].predicted_ft = emb
+
+        assignments, _ = self.cluster_by_kmeans_embedding(640)
+
+        for vi, lb in assignments.items():
+            self.g.vertices[vi].predicted_lb = lb
+
+    def cluster_by_kmeans_embedding(self,emb_dim):
+        """
+        semi-supervised Kmeans
+        :return: assignments: {vid: lb}, centroids
+        """
+
+        num_iterations = self.kmeans_iterations
+
+        # Step 1: Initialize centroids
+        labels = set(v.label for v in self.g.vertices.values() if v.labeled)
+        centroids = {label: np.array([0.0 for _ in range(emb_dim)]) for label in labels}
+        counts = {label: 0 for label in labels}
+
+        # Calculate initial centroid positions
+        for v in self.g.vertices.values():
+            if v.labeled:
+                centroids[v.label] += v.predicted_ft
+                counts[v.label] += 1
+
+        # Average the sums to get initial centroids
+        for label in labels:
+            if counts[label] > 0:
+                centroids[label] /= counts[label]
+
+        # print(centroids)
+        # print(counts)
+
+        assignments = {}
+
+        # print("Kmeans clustering to predict labels...")
+        # K-means iteration
+        for _ in tqdm(range(num_iterations)):  # Run for a fixed number of iterations
+            # Step 2: Assign vertices to the nearest centroid
+            for v_id, v in self.g.vertices.items():
+                if not v.labeled:
+                    closest = min(centroids, key=lambda x: np.linalg.norm(v.predicted_ft - centroids[x]))
+                    assignments[v_id] = closest
+                else:
+                    assignments[v_id] = v.label
+
+            # Step 3: Update centroids
+            new_centroids = {label: np.array([0.0 for _ in range(emb_dim)]) for label in labels}
+            new_counts = {label: 0 for label in labels}
+
+            for v_id, closest in assignments.items():
+                new_centroids[closest] += self.g.vertices[v_id].predicted_ft
+                new_counts[closest] += 1
+
+            # Average the sums to update centroids
+            for label in labels:
+                if new_counts[label] > 0:
+                    new_centroids[label] = new_centroids[label] / new_counts[label]
+
+            centroids = new_centroids
+
+            # # for experiment
+            # for i, lb in assignments.items():
+            #     self.g.vertices[i].predicted_lb = lb
+            # self.visualize_results()
+
+        return assignments, centroids
+
+    def predict_labels_by_mlp(self, fts):
+        """
+        Use an MLP with Softmax to assign labels to vertices.
+
+        :param fts: Features for all vertices
+        """
+        # Step 1: Assign features to vertices
+        for i, ft in enumerate(fts):
+            self.g.vertices[i].predicted_ft = ft
+
+        # Step 2: Prepare labeled data
+        X = []
+        y = []
+        for v in self.g.vertices.values():
+            if v.labeled:
+                X.append(v.predicted_ft)  # Use assigned features
+                y.append(v.label)
+
+        X = np.array(X, dtype=float)
+        y = np.array(y)
+
+        # Map labels to integers for training
+        label_to_int = {label: idx for idx, label in enumerate(set(y))}
+        int_to_label = {idx: label for label, idx in label_to_int.items()}
+        y_int = np.array([label_to_int[label] for label in y])
+
+        # Train-test split
+        from sklearn.model_selection import train_test_split
+        X_train, X_test, y_train, y_test = train_test_split(X, y_int, test_size=0.2, random_state=42)
+
+        # Convert data to PyTorch tensors
+        import torch
+        X_train_tensor = torch.tensor(X_train, dtype=torch.float32)
+        y_train_tensor = torch.tensor(y_train, dtype=torch.long)
+        X_test_tensor = torch.tensor(X_test, dtype=torch.float32)
+        y_test_tensor = torch.tensor(y_test, dtype=torch.long)
+
+        # Step 3: Define the MLP model
+        import torch.nn as nn
+        import torch.optim as optim
+
+        class MLPClassifier(nn.Module):
+            def __init__(self, input_dim, hidden_dim1, hidden_dim2, hidden_dim3, output_dim):
+                super(MLPClassifier, self).__init__()
+                self.fc1 = nn.Linear(input_dim, hidden_dim1)
+                self.relu = nn.ReLU()
+                self.fc2 = nn.Linear(hidden_dim1, hidden_dim2)
+                self.fc3 = nn.Linear(hidden_dim2, output_dim)
+                # self.relu = nn.ReLU()
+                # self.fc4 = nn.Linear(hidden_dim3, output_dim)
+                self.softmax = nn.Softmax(dim=1)
+
+            def forward(self, x):
+                x = self.fc1(x)
+                x = self.relu(x)
+                x = self.fc2(x)
+                x = self.relu(x)
+                x = self.fc3(x)
+                # x = self.relu(x)
+                # x = self.fc4(x)
+                # x = self.relu(x)
+                x = self.softmax(x)
+                return x
+
+        input_dim = self.predicted_ft_d  # Feature dimension
+        hidden_dim1 = 320  # Number of hidden units
+        hidden_dim2 = 160 
+        hidden_dim3 = 80
+        output_dim = len(label_to_int)  # Number of classes
+
+        model = MLPClassifier(input_dim, hidden_dim1, hidden_dim2, hidden_dim3, output_dim)
+        criterion = nn.CrossEntropyLoss()
+        optimizer = optim.Adam(model.parameters(), lr=0.01)
+
+        # Step 4: Train the model
+        epochs = 100000
+        model.train()
+        for epoch in range(epochs):
+            optimizer.zero_grad()
+            outputs = model(X_train_tensor)
+            loss = criterion(outputs, y_train_tensor)
+            loss.backward()
+            optimizer.step()
+
+            if (epoch + 1) % 10 == 0:
+                print(f"Epoch {epoch + 1}/{epochs}, Loss: {loss.item():.4f}")
+
+        # Evaluate the model on the test set
+        model.eval()
+        with torch.no_grad():
+            test_outputs = model(X_test_tensor)
+            _, test_predictions = torch.max(test_outputs, 1)
+            test_accuracy = (test_predictions == y_test_tensor).sum().item() / y_test_tensor.size(0)
+        print(f"Test Accuracy: {test_accuracy * 100:.2f}%")
+
+        # Step 5: Predict labels for all vertices
+        all_features = torch.tensor(np.array(fts, dtype=float), dtype=torch.float32)
+        model.eval()
+        with torch.no_grad():
+            predictions = model(all_features)
+            _, predicted_classes = torch.max(predictions, 1)
+
+        # Assign predicted labels back to vertices
+        for i, predicted_label in enumerate(predicted_classes.numpy()):
+            self.g.vertices[i].predicted_lb = int_to_label[predicted_label]
+
+        print("Labels predicted using MLP!")
+
 
     def visualize_results(self):
         self.g.visualize_simple_graph(pre=True)
